@@ -22,7 +22,15 @@ app.post('/', async (req, res) => {
             const encode_pwd = await bcrypt.compare(password, user[0].password);
 
             if (encode_pwd) {
-                const token = await jwt.sign({id: user[0].admin_id, nickname: user[0].nickname}, 'secret', {expiresIn: '7d'});
+                const token = await jwt.sign(
+                    {
+                        id: user[0].admin_id,
+                        nickname: user[0].nickname,
+                        name: user[0].admin_name
+                    },
+                    'secret',
+                    {expiresIn: '7d'}
+                );
                 res.send({token: token});
             } else {
                 res.send({token: 'pwd_false'});
