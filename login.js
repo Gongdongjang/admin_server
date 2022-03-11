@@ -12,28 +12,38 @@ app.post('/', async (req, res) => {
     const password = body.password;
 
     if (id === undefined || password === undefined) {
-        res.send({token: 'false'});
+        res.send({access_token: 'false'});
     } else {
         const [user, field] = await db.execute(`SELECT * FROM admin_user WHERE admin_id = ?`, [id]);
 
         if (user.length === 0) {
-            res.send({token: 'id_false'});
+            res.send({access_token: 'id_false'});
         } else {
             const encode_pwd = await bcrypt.compare(password, user[0].password);
 
             if (encode_pwd) {
-                const token = await jwt.sign(
+                const access_token = await jwt.sign(
                     {
                         id: user[0].admin_id,
                         nickname: user[0].nickname,
                         name: user[0].admin_name
                     },
                     'secret',
-                    {expiresIn: '7d'}
+                    {expiresIn: '1h'}
                 );
-                res.send({token: token});
+                const refresh_token = await jwt.sign(
+                    {
+                        id: user[0].admin_id
+                    },
+                    'secret',
+                    {expiresIn: '14d'}
+                )
+                res.send({
+                    access_token: access_token,
+                    refresh_token: refresh_token
+                });
             } else {
-                res.send({token: 'pwd_false'});
+                res.send({access_token: 'pwd_false'});
             }
         }
     }
