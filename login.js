@@ -40,6 +40,9 @@ app.post('/', async (req, res) => {
                     jwt_secret,
                     {expiresIn: '14d'}
                 )
+
+                res.cookie('access_token', access_token, {httpOnly: true, maxAge: 60000 * 60});
+                res.cookie('refresh_token', refresh_token, {httpOnly: true, maxAge: 60000 * 60 * 24 * 14});
                 res.send({
                     access_token: access_token,
                     refresh_token: refresh_token
@@ -73,6 +76,7 @@ app.post('/refresh', async (req, res) => {
                 {expiresIn: '1h'}
             );
 
+            res.cookie('access_token', access_token, {httpOnly: true, maxAge: 60000 * 60, overwrite: true});
             res.send({
                 access_token: access_token,
                 refresh_token: refresh_token
