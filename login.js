@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const jwt_secret = require('./config').jwt_secret;
 const db = require('./db');
 
 app.use(express.json())
@@ -28,14 +29,14 @@ app.post('/', async (req, res) => {
                         nickname: user[0].nickname,
                         name: user[0].admin_name
                     },
-                    'secret',
+                    jwt_secret,
                     {expiresIn: '1h'}
                 );
                 const refresh_token = await jwt.sign(
                     {
                         id: user[0].admin_id
                     },
-                    'secret',
+                    jwt_secret,
                     {expiresIn: '14d'}
                 )
                 res.send({
