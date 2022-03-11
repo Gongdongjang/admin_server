@@ -51,4 +51,36 @@ app.post('/', async (req, res) => {
     }
 })
 
+// access_token 만료 -> refresh token 을 이용해 재발급
+app.post('/refresh', async (req, res) => {
+    const body = req.body;
+    const refresh_token = body.refresh_token;
+
+    if (refresh_token === undefined) {
+        res.sendStatus(400);
+    } else {
+        try {
+            const refresh_verify = jwt.verify(refresh_token, jwt_secret);
+
+            const [user, fields] = await db.execute('SELECT * FROM admin_user WHERE admin_id = ?', [refresh_verify.id]);
+            const access_token = await jwt.sign(
+                {
+                    id: user[0].admin_id,
+                    nickname: user[0].nickname,
+                    name: user[0].admin_name
+                },
+                jwt_secret,
+                {expiresIn: '1h'}
+            );
+
+            res.send({
+                access_token: access_token,
+                refresh_token: refresh_token
+            })
+        } catch (e) {
+            res.status(401).send({msg: "retry login"});
+        }
+    }
+})
+
 module.exports = app;
