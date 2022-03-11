@@ -7,6 +7,7 @@ const db = require('./db');
 
 app.use(express.json())
 
+// login
 app.post('/', async (req, res) => {
     const body = req.body;
     const id = body.id;
@@ -48,7 +49,6 @@ app.post('/', async (req, res) => {
             }
         }
     }
-
 })
 
 module.exports = app;
