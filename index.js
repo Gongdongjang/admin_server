@@ -4,7 +4,7 @@ const login_register = require('./login');
 const cors = require('cors');
 
 app.use(cors());
-app.use('/login', login_register);
+app.use('/api/login', login_register);
 
 app.get('/', async (req, res) => {
     res.send({test: 'initial commit'});
