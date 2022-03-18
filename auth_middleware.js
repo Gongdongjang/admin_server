@@ -11,7 +11,7 @@ const get_cookies = (req) => {
 };
 
 const auth_middleware = async (req, res, next) => {
-    if (req.headers.referer.indexOf('/login')) {
+    if (req.headers.referer.indexOf('/login') !== -1) {
         console.log('login pass');
         next();
     } else {
@@ -23,6 +23,7 @@ const auth_middleware = async (req, res, next) => {
         } else {
             try { // access_token 유효하면 인증 완료
                 req.decode = jwt.verify(access_token, jwt_secret);
+                console.log(req.decode);
                 next();
             } catch (e) { // access_token 만료 -> /refresh 필요
                 res.status(401).send({msg: "unauthorized"});
