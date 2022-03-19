@@ -98,4 +98,11 @@ app.get('/refresh', async (req, res) => {
     }
 })
 
+// logout
+app.post('/logout', async (req, res) => {
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+    res.send();
+})
+
 module.exports = app;
