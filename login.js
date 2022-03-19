@@ -54,14 +54,25 @@ app.post('/', async (req, res) => {
     }
 })
 
+const get_cookies = (req) => {
+    if (req.headers.cookie) {
+        let cookies = {};
+        req.headers && req.headers.cookie.split(';').forEach(function(cookie) {
+            let parts = cookie.match(/(.*?)=(.*)$/)
+            cookies[ parts[1].trim() ] = (parts[2] || '').trim();
+        });
+        return cookies;
+    } else return undefined;
+};
+
 // access_token 만료 -> refresh token 을 이용해 재발급
-app.post('/refresh', async (req, res) => {
-    const body = req.body;
-    const refresh_token = body.refresh_token;
+app.get('/refresh', async (req, res) => {
+    let refresh_token = get_cookies(req);
 
     if (refresh_token === undefined) {
         res.sendStatus(400);
     } else {
+        refresh_token = refresh_token['refresh_token'];
         try {
             const refresh_verify = jwt.verify(refresh_token, jwt_secret);
 
