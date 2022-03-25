@@ -35,26 +35,30 @@ app.use(express.json());
 // content 작성
 app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', maxCount: 1}]), async (req, res) => {
     const body = req.body;
-    const title = req.title;
-    const context = req.context;
-    const link = req.link;
+    const title = body.title;
+    const context = body.context;
+    const link = body.link;
     let photo;
     if (req.files['photo'] !== undefined) {
-        photo = req.files['photo'][0];
+        photo = req.files['photo'][0].key;
     } else {
         photo = null;
     }
     let thumbnail;
     if (req.files['thumbnail'] !== undefined) {
-        thumbnail = req.files['thumbnail'][0];
+        thumbnail = req.files['thumbnail'][0].key;
     } else {
         thumbnail = null;
     }
 
-    console.log(body);
-    console.log(photo);
-    console.log(thumbnail);
-    res.send(req.decode);
+    try {
+        const [result] = await db.execute(`INSERT INTO content(content_title, content_context, content_photo, content_link, content_thumbnail)
+                                        VALUES (?, ?, ?, ?, ?)`, [title, context, photo, link, thumbnail]);
+        res.send({id: result.insertId});
+    } catch (e) {
+        console.log(e);
+        res.status(500).send({msg: "server error"});
+    }
 });
 
 module.exports = app;
