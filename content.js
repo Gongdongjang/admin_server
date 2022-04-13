@@ -61,6 +61,37 @@ app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', m
     }
 });
 
+app.patch('/update/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', maxCount: 1}]), async (req, res) => {
+    const content_id = req.params.content_id;
+    const body = req.body;
+
+    // 요청하는 것만 update
+    let sql_key = Object.keys(body).map((key) => `content_${key} = ?`).join(", ");
+    let sql_parameter = [...Object.values(body)];
+    // 사진 수정 요청
+    if (req.files['photo'] !== undefined) {
+        if (sql_key) sql_key += ', content_photo = ?';
+        else sql_key = 'content_photo = ?';
+        sql_parameter.push(req.files['photo'][0].key);
+    }
+    // 썸네일 수정 요청
+    if (req.files['thumbnail'] !== undefined) {
+        if (sql_key) sql_key += ', content_thumbnail = ?';
+        else sql_key = 'content_thumbnail = ?';
+        sql_parameter.push(req.files['thumbnail'][0].key);
+    }
+    sql_parameter.push(content_id);
+
+    try {
+        const [result] = await db.execute(`UPDATE content SET ${sql_key} WHERE content_id = ?`, sql_parameter);
+        res.send(result);
+    } catch (e) {
+        console.log(e);
+    }
+    console.log(sql_key);
+    console.log(sql_parameter);
+})
+
 app.delete('/delete/:content_id', async (req, res) => {
     const content_id = req.params.content_id;
 
