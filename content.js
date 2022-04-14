@@ -38,6 +38,14 @@ app.get('/', async (req, res) => {
     res.send(contents);
 })
 
+// content 제목으로 검색
+app.get('/search', async (req, res) => {
+    const title_word = req.query.title;
+
+    const [contents, fields] = await db.execute(`SELECT * FROM content WHERE content_title LIKE ?`, ['%' + title_word + '%']);
+    res.send(contents);
+})
+
 // 특정 content
 app.get('/:content_id', async (req, res) => {
     const content_id = req.params.content_id;
