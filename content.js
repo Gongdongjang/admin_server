@@ -32,6 +32,19 @@ const upload = multer({
 
 app.use(express.json());
 
+// 모든 content 리스트
+app.get('/', async (req, res) => {
+    const [contents, field] = await db.execute(`SELECT * FROM content`);
+    res.send(contents);
+})
+
+// 특정 content
+app.get('/:content_id', async (req, res) => {
+    const content_id = req.params.content_id;
+    const [content, field] = await db.execute(`SELECT * FROM content WHERE content_id = ?`, [content_id]);
+    res.send(content[0]);
+})
+
 // content 작성
 app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', maxCount: 1}]), async (req, res) => {
     const body = req.body;
