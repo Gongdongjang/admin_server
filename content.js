@@ -59,6 +59,7 @@ app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', m
     const title = body.title;
     const context = body.context;
     const link = body.link;
+    const is_tmp = body.is_tmp === 'true';
     let photo;
     if (req.files['photo'] !== undefined) {
         photo = req.files['photo'][0].key;
@@ -73,8 +74,8 @@ app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', m
     }
 
     try {
-        const [result] = await db.execute(`INSERT INTO content(content_title, content_context, content_photo, content_link, content_thumbnail)
-                                        VALUES (?, ?, ?, ?, ?)`, [title, context, photo, link, thumbnail]);
+        const [result] = await db.execute(`INSERT INTO content(content_title, content_context, content_photo, content_link, content_thumbnail, is_tmp)
+                                        VALUES (?, ?, ?, ?, ?, ?)`, [title, context, photo, link, thumbnail, is_tmp]);
         res.send({id: result.insertId});
     } catch (e) {
         console.log(e);
