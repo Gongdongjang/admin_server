@@ -19,8 +19,7 @@ const cc = async () => {
 app.get('/', async(req, res) => {
   
 try {
-  let [rows, fields] = await db.execute("SELECT * FROM md");
-  //console.log(rows);
+  let [rows, fields] = await db.execute("SELECT * FROM md LEFT JOIN pickup ON md.md_id= pickup.md_id");
   res.send(rows);
   } 
   catch (e) {
@@ -28,5 +27,16 @@ try {
   }
 
 });
+app.get('/pu', async(req, res) => {
+  
+    try {
+      let [rows1, fields1] = await db.execute("SELECT * FROM md LEFT JOIN pickup ON md.md_id= pickup.md_id");
+      res.send(rows1);
+      } 
+      catch (e) {
+          console.log(e);
+      }
+    
+    });
 //cc();
 module.exports = app;
