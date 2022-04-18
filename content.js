@@ -34,7 +34,7 @@ app.use(express.json());
 
 // 모든 content 리스트
 app.get('/', async (req, res) => {
-    const [contents, field] = await db.execute(`SELECT * FROM content ORDER BY content_date DESC`);
+    const [contents, field] = await db.execute(`SELECT * FROM content WHERE is_tmp = 0 ORDER BY content_date DESC`);
     res.send(contents);
 })
 
