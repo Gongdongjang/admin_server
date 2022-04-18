@@ -38,6 +38,12 @@ app.get('/', async (req, res) => {
     res.send(contents);
 })
 
+// 임시 저장된 content 리스트
+app.get('/tmp', async (req, res) => {
+    const [contents, field] = await db.execute(`SELECT * FROM content WHERE is_tmp = 1 ORDER BY content_date DESC`);
+    res.send(contents);
+})
+
 // content 제목으로 검색
 app.get('/search', async (req, res) => {
     const title_word = req.query.title;
