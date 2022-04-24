@@ -48,7 +48,7 @@ app.get('/tmp', async (req, res) => {
 app.get('/search', async (req, res) => {
     const title_word = req.query.title;
 
-    const [contents, fields] = await db.execute(`SELECT * FROM content WHERE content_title LIKE ?`, ['%' + title_word + '%']);
+    const [contents, fields] = await db.execute(`SELECT * FROM content WHERE content_title LIKE ? AND is_tmp = 0 ORDER BY content_date DESC`, ['%' + title_word + '%']);
     res.send(contents);
 })
 
