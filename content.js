@@ -89,6 +89,7 @@ app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', m
     }
 });
 
+// content 수정
 app.patch('/update/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', maxCount: 1}]), async (req, res) => {
     const content_id = req.params.content_id;
     const body = req.body;
@@ -120,6 +121,7 @@ app.patch('/update/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {n
     console.log(sql_parameter);
 })
 
+// content 삭제(편집)
 app.delete('/delete/:content_id', async (req, res) => {
     const content_id = req.params.content_id;
 
