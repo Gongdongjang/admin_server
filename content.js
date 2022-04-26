@@ -95,7 +95,10 @@ app.patch('/update/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {n
     const body = req.body;
 
     // 요청하는 것만 update
-    let sql_key = Object.keys(body).map((key) => `content_${key} = ?`).join(", ");
+    let sql_key = Object.keys(body).map((key) => {
+        if (key !== 'is_tmp') return `content_${key} = ?`
+        else return `${key} = ?`
+    }).join(", ");
     let sql_parameter = [...Object.values(body)];
     // 사진 수정 요청
     if (req.files['photo'] !== undefined) {
