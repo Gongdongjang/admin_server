@@ -93,6 +93,8 @@ app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', m
 app.patch('/update/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', maxCount: 1}]), async (req, res) => {
     const content_id = req.params.content_id;
     const body = req.body;
+    let photo_update = false;
+    let thumbnail_update = false;
 
     // 요청하는 것만 update
     let sql_key = Object.keys(body).map((key) => {
@@ -105,17 +107,46 @@ app.patch('/update/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {n
         if (sql_key) sql_key += ', content_photo = ?';
         else sql_key = 'content_photo = ?';
         sql_parameter.push(req.files['photo'][0].key);
+        photo_update = true;
     }
     // 썸네일 수정 요청
     if (req.files['thumbnail'] !== undefined) {
         if (sql_key) sql_key += ', content_thumbnail = ?';
         else sql_key = 'content_thumbnail = ?';
         sql_parameter.push(req.files['thumbnail'][0].key);
+        thumbnail_update = true;
     }
     sql_parameter.push(content_id);
 
     try {
+        const [content, field] = await db.execute(`SELECT * FROM content WHERE content_id = ?`, [content_id]);
         const [result] = await db.execute(`UPDATE content SET ${sql_key} WHERE content_id = ?`, sql_parameter);
+
+        // 사진이나 썸네일 수정 시, s3에서 이전 사진/썸네일 삭제
+        if (photo_update || thumbnail_update) {
+            const photo = content[0].content_photo;
+            const thumbnail = content[0].content_thumbnail;
+            console.log(photo, thumbnail);
+
+            if (photo_update) {
+                s3.deleteObject({
+                    Bucket: 'gdjang',
+                    Key: photo
+                }, (err, data) => {
+                    if (err) console.log(err);
+                    else console.log(data);
+                });
+            }
+            if (thumbnail_update) {
+                s3.deleteObject({
+                    Bucket: 'gdjang',
+                    Key: thumbnail
+                }, (err, data) => {
+                    if (err) console.log(err);
+                    else console.log(data);
+                });
+            }
+        }
         res.send(result);
     } catch (e) {
         console.log(e);
