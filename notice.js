@@ -29,6 +29,18 @@ const upload = multer({
 
 app.use(express.json());
 
+// notice 가져오기
+app.get('/', async (req, res) => {
+    try {
+        const [notices, fields] = await db.execute(`SELECT * FROM notice ORDER BY notice_date DESC `);
+        res.send(notices);
+    } catch (e) {
+        console.log(e);
+        res.status(500).send({msg: "server error"});
+    }
+
+})
+
 // notice 작성
 app.post('/', upload.single('photo'), async (req, res) => {
     const body = req.body;
