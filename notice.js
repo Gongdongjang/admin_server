@@ -46,12 +46,16 @@ app.post('/', upload.single('photo'), async (req, res) => {
     const body = req.body;
     const title = body.title;
     const context = body.context;
+    const target = body.target;
+    const type = body.type;
+    const date = body.date;
     let photo;
     if (req.file) photo = req.file.key;
     else photo = null;
 
     try {
-        const [result] = await db.execute(`INSERT INTO notice (notice_title, notice_context, notice_photo) VALUES (?, ?, ?)`, [title, context, photo]);
+        const [result] = await db.execute(`INSERT INTO notice (notice_title, notice_context, notice_photo, notice_date, notice_target, notice_type) VALUES (?, ?, ?, ?, ?, ?)`,
+          [title, context, photo, date, target, type]);
         res.send({id: result.insertId});
     } catch (e) {
         console.log(e);
