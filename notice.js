@@ -32,13 +32,12 @@ app.use(express.json());
 // notice 가져오기
 app.get('/', async (req, res) => {
     try {
-        const [notices, fields] = await db.execute(`SELECT * FROM notice ORDER BY notice_date DESC `);
+        const [notices, fields] = await db.execute(`SELECT * FROM notice WHERE notice_date < CURRENT_DATE() ORDER BY notice_date DESC`);
         res.send(notices);
     } catch (e) {
         console.log(e);
         res.status(500).send({msg: "server error"});
     }
-
 })
 
 // notice 작성
