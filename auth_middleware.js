@@ -14,7 +14,7 @@ const get_cookies = (req) => {
 };
 
 const auth_middleware = async (req, res, next) => {
-    if (req.originalUrl.indexOf('/login') !== -1) { // 로그인 관련 시도는 auth_middleware 통과하게
+    if (req.originalUrl.indexOf('/login') !== -1 || req.originalUrl.indexOf('/signup') !== -1) { // 로그인 관련 시도는 auth_middleware 통과하게
         console.log('login pass');
         next();
     } else {
