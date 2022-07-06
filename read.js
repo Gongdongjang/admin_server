@@ -58,4 +58,18 @@ app.get('/name/:md_id', async (req, res) => {//md_id에 따라 상점,농장 이
   res.json( { farm_name: farmName ,store_name:storeName });
   
 });
+
+app.get('/pickup/:md_id', async (req, res) => {//특정 md의 픽업리스트 출력
+  const md_id = req.params.md_id;
+  
+  try{
+    
+    let [row2, field] = await db.execute("select * from "+"`"+"order"+"`"+` where md_id=?`, [md_id]);
+    res.send(row2);
+    
+  }
+  catch (e) {
+    consoe.log(e);
+}
+});
 module.exports = app;

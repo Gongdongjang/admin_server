@@ -146,11 +146,13 @@ app.get('/name/:farm_id/:store_id', async (req, res) => {//상점,농장 이름 
   const farmId = req.params.farm_id;
   const storeId = req.params.store_id;
 
-  const [row4, field2] = await db.execute(`select  farm_name from farm  where farm_id=?`, [farmId]);
-  const [row5, field3] = await db.execute(`select  store_name from store  where store_id=?`, [storeId]);
-  let farmName = row4[0].farm_name;
+  const [row4, field2] = await db.execute(`select  farm_name,farm_info from farm  where farm_id=?`, [farmId]);
+  const [row5, field3] = await db.execute(`select  store_name,store_info from store  where store_id=?`, [storeId]);
+  let farmName = row4[0].farm_name; 
+  let farmInfo = row4[0].farm_info;
   let storeName = row5[0].store_name;
-  res.json( { farm_name: farmName ,store_name:storeName });
+  let storeInfo = row5[0].store_info;
+  res.json( { farm_name: farmName ,farm_info:farmInfo,store_name:storeName,store_info:storeInfo });
   
 });
 

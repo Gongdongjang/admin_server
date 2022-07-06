@@ -49,8 +49,8 @@ app.post('/md', async(req, res)=>{
         insertId = result1.insertId;
         console.log("md"+insertId);
         //insert payment table
-        const [result2] = await db.execute('insert into payment(pay_price,pay_qty,pay_comp,pay_dc,pay_schedule,md_id) VALUES (?, ?, ?, ?, ?, ?)',
-         [price, 1, comp, dc, paySchedule, insertId ]);
+        const [result2] = await db.execute('insert into payment(pay_price,pay_comp,pay_dc,pay_schedule,md_id) VALUES (?, ?, ?, ?, ?, ?)',
+         [price, comp, dc, paySchedule, insertId ]);
 
         //insert pickup table
         const [result3] = await db.execute('INSERT INTO pickup(pu_start,pu_end,md_id,store_id) VALUES (?, ?, ?, ?)',
