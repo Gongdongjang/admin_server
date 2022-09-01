@@ -45,7 +45,7 @@ app.post('/', upload.single('photo'), async (req, res) => {
     const body = req.body;
     const title = body.title;
     const context = body.context;
-    const target = body.target;
+    const target = '소비자';
     const type = body.type;
     const date = body.date;
     let photo;
