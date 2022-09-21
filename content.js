@@ -34,7 +34,6 @@ app.use(express.json());
 
 // 모든 content 리스트
 app.get('/', async (req, res) => {
-    // TODO: content_date를 발송 예약 날짜로 변경해야함
     const query = req.query.aspect;
     let return_content;
     if (query === 'admin') { // 관리자용
@@ -42,7 +41,7 @@ app.get('/', async (req, res) => {
         return_content = contents;
     }
     else { // 소비자용
-        const [contents, fields] = await db.execute(`SELECT * FROM content WHERE is_tmp = 0 AND content_date < CURRENT_DATE() ORDER BY content_date DESC`);
+        const [contents, fields] = await db.execute(`SELECT * FROM content WHERE is_tmp = 0 AND upload_date < CURRENT_DATE() ORDER BY content_date DESC`);
         return_content = contents;
     }
     res.send(return_content);
