@@ -110,7 +110,7 @@ app.patch('/update/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {n
 
     // 요청하는 것만 update
     let sql_key = Object.keys(body).map((key) => {
-        if (key !== 'is_tmp') return `content_${key} = ?`
+        if (key !== 'is_tmp' && !key.includes('upload')) return `content_${key} = ?`;
         else return `${key} = ?`
     }).join(", ");
     let sql_parameter = [...Object.values(body)];
