@@ -168,42 +168,46 @@ app.patch('/update/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {n
 })
 
 // content 삭제(편집)
-app.delete('/delete/:content_id', async (req, res) => {
-    const content_id = req.params.content_id;
+app.delete('/', async (req, res) => {
+    const content_ids = req.body.content_ids;
+    console.log(content_ids);
 
     try {
-        const [content, field] = await db.execute(`SELECT * FROM content WHERE content_id=?`, [content_id]);
-        const photo = content[0].content_photo;
-        const thumbnail = content[0].content_thumbnail;
+        for (let content_id of content_ids) {
+            content_id = content_id.id;
+            const [content, field] = await db.execute(`SELECT * FROM content WHERE content_id=?`, [content_id]);
+            const photo = content[0].content_photo;
+            const thumbnail = content[0].content_thumbnail;
 
-        console.log(photo, thumbnail);
+            console.log(photo, thumbnail);
 
-        // db 에서 content 삭제
-        const [result] = await db.execute(`DELETE FROM content WHERE content_id=?`, [content_id]);
-        // 성공하면
-        if (result) {
-            s3.deleteObject({
-                Bucket: 'gdjang',
-                Key: thumbnail
-            }, (err, data) => {
-                if (err) console.log(err);
-                else console.log(data);
-            });
-
-            // 만약 첨부 사진이 있으면
-            if (photo) {
+            // db 에서 content 삭제
+            const [result] = await db.execute(`DELETE FROM content WHERE content_id=?`, [content_id]);
+            // 성공하면
+            if (result) {
                 s3.deleteObject({
                     Bucket: 'gdjang',
-                    Key: photo
+                    Key: thumbnail
                 }, (err, data) => {
                     if (err) console.log(err);
                     else console.log(data);
                 });
+
+                // 만약 첨부 사진이 있으면
+                if (photo) {
+                    s3.deleteObject({
+                        Bucket: 'gdjang',
+                        Key: photo
+                    }, (err, data) => {
+                        if (err) console.log(err);
+                        else console.log(data);
+                    });
+                }
+            } else {
+                res.status(400).send({msg: '삭제 실패'});
             }
-            res.send({content_id: content_id, msg: '삭제 성공'});
-        } else {
-            res.status(400).send({msg: '삭제 실패'});
         }
+        res.send({content_id: content_ids, msg: '삭제 성공'});
     } catch (e) {
         console.log(e);
         res.status(400).send({msg: '잘못된 content 삭제 시도'});
