@@ -168,7 +168,7 @@ app.patch('/update/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {n
 })
 
 // content 삭제(편집)
-app.delete('/', async (req, res) => {
+app.post('/delete', async (req, res) => {
     const content_ids = req.body.content_ids;
     console.log(content_ids);
 
