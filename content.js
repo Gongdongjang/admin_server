@@ -69,7 +69,7 @@ app.get('/:content_id', async (req, res) => {
 })
 
 // content 작성
-app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', maxCount: 1}]), async (req, res) => {
+app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', maxCount: 1}, {name: 'main', maxCount: 1}]), async (req, res) => {
     const body = req.body;
     const title = body.title;
     const context = body.context;
@@ -89,10 +89,16 @@ app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', m
     } else {
         thumbnail = null;
     }
+    let main;
+    if (req.files['main'] !== undefined) {
+        main = req.files['main'][0].key;
+    } else {
+        main = null;
+    }
 
     try {
-        const [result] = await db.execute(`INSERT INTO content(content_title, content_context, content_photo, content_link, content_thumbnail, is_tmp, upload_type, upload_date)
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, [title, context, photo, link, thumbnail, is_tmp, upload_type, upload_date]);
+        const [result] = await db.execute(`INSERT INTO content(content_title, content_context, content_photo, content_link, content_thumbnail, is_tmp, upload_type, upload_date, content_main)
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, [title, context, photo, link, thumbnail, is_tmp, upload_type, upload_date, main]);
         res.send({id: result.insertId});
     } catch (e) {
         console.log(e);
