@@ -107,7 +107,7 @@ app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', m
 });
 
 // content 수정
-app.patch('/update/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', maxCount: 1}]), async (req, res) => {
+app.patch('/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', maxCount: 1}]), async (req, res) => {
     const content_id = req.params.content_id;
     let body = req.body;
     body.is_tmp = body.is_tmp === 'true';
