@@ -107,12 +107,13 @@ app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', m
 });
 
 // content 수정
-app.patch('/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', maxCount: 1}]), async (req, res) => {
+app.patch('/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', maxCount: 1}, {name: 'main', maxCount: 1}]), async (req, res) => {
     const content_id = req.params.content_id;
     let body = req.body;
     body.is_tmp = body.is_tmp === 'true';
     let photo_update = false;
     let thumbnail_update = false;
+    let main_update = false;
 
     // 요청하는 것만 update
     let sql_key = Object.keys(body).map((key) => {
@@ -134,17 +135,24 @@ app.patch('/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 't
         sql_parameter.push(req.files['thumbnail'][0].key);
         thumbnail_update = true;
     }
+    // 메인 사진 수정 요청
+    if (req.files['main'] !== undefined) {
+        if (sql_key) sql_key += ', content_main = ?';
+        else sql_key = 'content_main = ?';
+        sql_parameter.push(req.files['main'][0].key);
+        main_update = true;
+    }
     sql_parameter.push(content_id);
 
     try {
         const [content, field] = await db.execute(`SELECT * FROM content WHERE content_id = ?`, [content_id]);
         const [result] = await db.execute(`UPDATE content SET ${sql_key} WHERE content_id = ?`, sql_parameter);
 
-        // 사진이나 썸네일 수정 시, s3에서 이전 사진/썸네일 삭제
-        if (photo_update || thumbnail_update) {
+        // 사진이나 썸네일/메인 수정 시, s3에서 이전 사진/썸네일/메인 삭제
+        if (photo_update || thumbnail_update || main_update) {
             const photo = content[0].content_photo;
             const thumbnail = content[0].content_thumbnail;
-            console.log(photo, thumbnail);
+            const main = content[0].content_main;
 
             if (photo_update) {
                 s3.deleteObject({
@@ -159,6 +167,15 @@ app.patch('/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 't
                 s3.deleteObject({
                     Bucket: 'gdjang',
                     Key: thumbnail
+                }, (err, data) => {
+                    if (err) console.log(err);
+                    else console.log(data);
+                });
+            }
+            if (main) {
+                s3.deleteObject({
+                    Bucket: 'gdjang',
+                    Key: main
                 }, (err, data) => {
                     if (err) console.log(err);
                     else console.log(data);
