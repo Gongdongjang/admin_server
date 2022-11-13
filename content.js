@@ -201,6 +201,7 @@ app.post('/delete', async (req, res) => {
             const [content, field] = await db.execute(`SELECT * FROM content WHERE content_id=?`, [content_id]);
             const photo = content[0].content_photo;
             const thumbnail = content[0].content_thumbnail;
+            const main = content[0].content_main;
 
             console.log(photo, thumbnail);
 
@@ -225,6 +226,16 @@ app.post('/delete', async (req, res) => {
                         if (err) console.log(err);
                         else console.log(data);
                     });
+                }
+
+                if (main) {
+                    s3.deleteObject({
+                        Bucket: 'gdjang',
+                        Key: main
+                    }, (err, data) => {
+                        if (err) console.log(err);
+                        else console.log(data);
+                    })
                 }
             } else {
                 res.status(400).send({msg: '삭제 실패'});
