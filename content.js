@@ -55,9 +55,9 @@ app.get('/tmp', async (req, res) => {
 
 // content 제목으로 검색
 app.get('/search', async (req, res) => {
-    const title_word = req.query.title;
+    const search_word = req.query.search;
 
-    const [contents, fields] = await db.execute(`SELECT * FROM content WHERE content_title LIKE ? AND is_tmp = 0 ORDER BY content_date DESC`, ['%' + title_word + '%']);
+    const [contents, fields] = await db.execute(`SELECT * FROM content WHERE CONCAT_WS(' ', content_context, content_title) LIKE ? AND is_tmp = 0 ORDER BY content_date DESC`, ['%' + search_word + '%']);
     res.send(contents);
 })
 
