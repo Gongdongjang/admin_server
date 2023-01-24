@@ -35,15 +35,16 @@ app.use(express.json());
 // 모든 content 리스트
 app.get('/', async (req, res) => {
     const query = req.query.aspect;
+    const is_tmp = req.query.is_tmp;
     const category = req.query.category;
 
     let return_content;
     if (query === 'admin') { // 관리자용
         if (!category) {
-            const [contents, field] = await db.execute(`SELECT * FROM content WHERE is_tmp = 0 ORDER BY content_date DESC`);
+            const [contents, field] = await db.execute(`SELECT * FROM content WHERE is_tmp = ? ORDER BY content_date DESC`, [is_tmp]);
             return_content = contents;
         } else {
-            const [contents, field] = await db.execute(`SELECT * FROM content WHERE content_category = ? AND is_tmp = 0 ORDER BY content_date DESC`, [category]);
+            const [contents, field] = await db.execute(`SELECT * FROM content WHERE content_category = ? AND is_tmp = ? ORDER BY content_date DESC`, [category, is_tmp]);
             return_content = contents;
         }
     }
@@ -55,10 +56,10 @@ app.get('/', async (req, res) => {
 })
 
 // 임시 저장된 content 리스트
-app.get('/tmp', async (req, res) => {
-    const [contents, field] = await db.execute(`SELECT * FROM content WHERE is_tmp = 1 ORDER BY content_date DESC`);
-    res.send(contents);
-})
+// app.get('/tmp', async (req, res) => {
+//     const [contents, field] = await db.execute(`SELECT * FROM content WHERE is_tmp = 1 ORDER BY content_date DESC`);
+//     res.send(contents);
+// })
 
 // content 제목으로 검색
 app.get('/search', async (req, res) => {
