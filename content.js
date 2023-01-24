@@ -35,10 +35,17 @@ app.use(express.json());
 // 모든 content 리스트
 app.get('/', async (req, res) => {
     const query = req.query.aspect;
+    const category = req.query.category;
+
     let return_content;
     if (query === 'admin') { // 관리자용
-        const [contents, field] = await db.execute(`SELECT * FROM content WHERE is_tmp = 0 ORDER BY content_date DESC`);
-        return_content = contents;
+        if (!category) {
+            const [contents, field] = await db.execute(`SELECT * FROM content WHERE is_tmp = 0 ORDER BY content_date DESC`);
+            return_content = contents;
+        } else {
+            const [contents, field] = await db.execute(`SELECT * FROM content WHERE content_category = ? AND is_tmp = 0 ORDER BY content_date DESC`, [category]);
+            return_content = contents;
+        }
     }
     else { // 소비자용
         const [contents, fields] = await db.execute(`SELECT * FROM content WHERE is_tmp = 0 AND upload_date < CURRENT_DATE() ORDER BY content_date DESC`);
