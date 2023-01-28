@@ -63,27 +63,31 @@ app.post('/', upload.single('photo'), async (req, res) => {
 })
 
 // notice 삭제
-app.delete('/delete/:notice_id', async (req, res) => {
-    const notice_id = req.params.notice_id;
+app.post('/delete', async (req, res) => {
+    const notice_ids = req.body.notice_ids;
 
     try {
-        const [notice, field] = await db.execute(`SELECT * FROM notice WHERE notice_id = ?`, [notice_id]);
-        const photo = notice[0].notice_photo;
+        for (let notice_id of notice_ids) {
+            notice_id = notice_id.id;
 
-        const [result] = await db.execute(`DELETE FROM notice WHERE notice_id = ?`, [notice_id]);
-        // 삭제 성공하면 photo 도 s3 에서 삭제
-        if (result) {
-            if (photo) {
-                s3.deleteObject({
-                    Bucket: 'gdjang',
-                    Key: photo
-                }, (err, data) => {
-                    if (err) console.log(err);
-                    else console.log(data);
-                });
-            }
-            res.send({notice_id: notice_id, msg: '삭제 성공'});
-        } else res.status(400).send({msg: '삭제 실패'});
+            const [notice, field] = await db.execute(`SELECT * FROM notice WHERE notice_id = ?`, [notice_id]);
+            const photo = notice[0].notice_photo;
+
+            const [result] = await db.execute(`DELETE FROM notice WHERE notice_id = ?`, [notice_id]);
+            // 삭제 성공하면 photo 도 s3 에서 삭제
+            if (result) {
+                if (photo) {
+                    s3.deleteObject({
+                        Bucket: 'gdjang',
+                        Key: photo
+                    }, (err, data) => {
+                        if (err) console.log(err);
+                        else console.log(data);
+                    });
+                }
+            } else res.status(400).send({msg: '삭제 실패'});
+        }
+        res.send({notice_id: notice_ids, msg: '삭제 성공'});
     } catch (e) {
         console.log(e);
         res.status(500).send({msg: 'server error'});
