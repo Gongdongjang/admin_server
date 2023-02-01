@@ -32,6 +32,39 @@ const upload = multer({
 
 app.use(express.json());
 
+// 홍보용 배너 콘텐츠 등록
+app.post('/banner', async (req, res) => {
+    const bannerIds = req.body.bannerIds;
+
+    try {
+        // 기존의 배너 콘텐츠는 NULL로 변경 후 새로 등록
+        await db.execute(`UPDATE content SET promotion_banner = ?`, [null]);
+
+        for (let bannerId of bannerIds) {
+            const id = bannerId.id;
+            const order = bannerId.order;
+
+            await db.execute(`UPDATE content SET promotion_banner = ? WHERE content_id = ?`, [order, id]);
+        }
+
+        res.send({msg: 'BANNER_CONTENT_CREATE_SUCCESS', data: bannerIds});
+    } catch (e) {
+        res.status(500).send({msg: 'BANNER_CONTENT_CREATE_FAIL'})
+    }
+})
+
+// 홍보용 배너 콘텐츠 조회
+app.get('/banner', async (req, res) => {
+    try {
+        const [result, field] = await db.execute(`SELECT * FROM content WHERE promotion_banner IS NOT NULL ORDER BY promotion_banner ASC`);
+
+        res.send({msg: 'BANNER_CONTENT_READ_SUCCESS', data: result});
+    } catch (e) {
+        console.log(e);
+        res.status(500).send({msg: 'BANNER_CONTENT_READ_FAIL'});
+    }
+})
+
 // 모든 content 리스트
 app.get('/', async (req, res) => {
     const query = req.query.aspect;
