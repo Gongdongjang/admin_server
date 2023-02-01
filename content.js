@@ -16,7 +16,7 @@ const s3 = new aws.S3({
 });
 const storage = multer_s3({
     s3: s3,
-    bucket: 'gdjang',
+    bucket: 'ggdjang',
     contentType: multer_s3.AUTO_CONTENT_TYPE,
     acl: 'public-read',
     metadata: function(req, file, cb) {
