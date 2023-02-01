@@ -34,7 +34,7 @@ app.use(express.json());
 
 // 홍보용 배너 콘텐츠 등록
 app.post('/banner', async (req, res) => {
-    const bannerIds = req.body.bannerIds;
+    const bannerIds = req.body;
 
     try {
         // 기존의 배너 콘텐츠는 NULL로 변경 후 새로 등록
@@ -49,6 +49,7 @@ app.post('/banner', async (req, res) => {
 
         res.send({msg: 'BANNER_CONTENT_CREATE_SUCCESS', data: bannerIds});
     } catch (e) {
+        console.log(e);
         res.status(500).send({msg: 'BANNER_CONTENT_CREATE_FAIL'})
     }
 })
