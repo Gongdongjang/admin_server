@@ -135,4 +135,27 @@ app.post('/phone-check/verify', async (req, res) => {
     }
 })
 
+app.post('/unique-number', async (req, res) => {
+    const body = req.body;
+    const storeName = body.storeName;
+    const uniqueNumber = body.uniqueNumber;
+
+    try {
+        const [result, field] = await db.execute(`SELECT store_number FROM store WHERE store_name= ?`, [storeName]);
+
+        if (result.length === 0) {
+            res.status(400).send({msg: 'STORE_NOT_FOUND'});
+        } else if (uniqueNumber === result[0].store_number) {
+            res.send({
+                msg: 'UNIQUE_NUMBER_VERIFY_SUCCESS',
+            });
+        } else {
+            res.status(400).send({msg: 'UNIQUE_NUMBER_VERIFY_FAIL'});
+        }
+    } catch (e) {
+        console.log(e);
+        res.status(500).send({msg: 'SERVER_ERROR'});
+    }
+})
+
 module.exports = app;
