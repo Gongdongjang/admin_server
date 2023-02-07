@@ -81,6 +81,9 @@ app.post('/token', upload.single('image'), async (req, res) => {
     const userIds = body.userIds;
     const tokens = await getTokensByUser(userIds);
 
+    const title = body.title;
+    const content = body.content;
+    const pushType = body.pushType;
 
     try {
         const noticeResult = await createNotification(body);
@@ -117,9 +120,53 @@ app.post('/token', upload.single('image'), async (req, res) => {
 })
 
 /** 토픽으로 알림 전송 */
-app.post('/topic', async (req, res) => {
+app.post('/topic', upload.single('image'), async (req, res) => {
+    const body = req.body;
+    const topic = body.topic;
 
+    const title = body.title;
+    const content = body.content;
+    const pushType = body.pushType;
 
+    try {
+        const noticeResult = await createNotification(body);
+
+        if (pushType === '실시간') {
+            const message = {
+                notification: {
+                    title: title,
+                    body: content
+                },
+                data: {
+                    title: title,
+                    body: content
+                },
+                /** 소비자 전체: userTopic */
+                topic: topic
+            }
+
+            const msgResult = await firebase.messaging().send(message);
+
+            const [userResult, field] = await db.execute('SELECT user_no FROM user');
+            let userIds = [];
+            for (let user of userResult) {
+                userIds.push(user.user_no);
+            }
+            await createNotificationByUser(noticeResult.insertId, userIds);
+
+            res.send({
+                msg: "NOTIFICATION_SEND_SUCCESS",
+                data: {
+                    successCount: msgResult.successCount,
+                    failureCount: msgResult.failureCount
+                }}
+            );
+        } else {
+            res.send({msg: "NOTIFICATION_RESERVE_SUCCESS"});
+        }
+    } catch (e) {
+        console.log(e);
+    }
 })
 
 module.exports = app;
