@@ -59,12 +59,8 @@ const createNotificationByUser = async (noticeId, userIds) => {
     }
 }
 
-/** 토큰으로 알림 전송 */
-app.post('/token', upload.single('image'), async (req, res) => {
-    const body = req.body;
-    const userIds = body.userIds;
-    const tokens = await getTokensByUser(userIds);
-
+/** 알림 생성 */
+const createNotification = async (body) => {
     const title = body.title;
     const content = body.content;
     const type = body.type;
@@ -73,9 +69,21 @@ app.post('/token', upload.single('image'), async (req, res) => {
     const pushType = body.pushType;
     const date = body.date;
 
-    try {
-        const [result, fields] = await db.execute(`INSERT INTO notification (notification_title, notification_content, notification_type, notification_target, notification_img,
+    const [result, fields] = await db.execute(`INSERT INTO notification (notification_title, notification_content, notification_type, notification_target, notification_img,
                           notification_push_type, notification_date) VALUES (?, ?, ?, ?, ?, ?, ?)`, [title, content, type, target, image, pushType, date]);
+
+    return result;
+}
+
+/** 토큰으로 알림 전송 */
+app.post('/token', upload.single('image'), async (req, res) => {
+    const body = req.body;
+    const userIds = body.userIds;
+    const tokens = await getTokensByUser(userIds);
+
+
+    try {
+        const noticeResult = await createNotification(body);
 
         if (pushType === '실시간') {
             const message = {
@@ -91,7 +99,7 @@ app.post('/token', upload.single('image'), async (req, res) => {
             }
 
             const msgResult = await firebase.messaging().sendMulticast(message);
-            await createNotificationByUser(result.insertId, userIds);
+            await createNotificationByUser(noticeResult.insertId, userIds);
 
             res.send({
                 msg: "NOTIFICATION_SEND_SUCCESS",
@@ -110,6 +118,7 @@ app.post('/token', upload.single('image'), async (req, res) => {
 
 /** 토픽으로 알림 전송 */
 app.post('/topic', async (req, res) => {
+
 
 })
 
