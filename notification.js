@@ -37,7 +37,27 @@ firebase.initializeApp({
 
 /** 알림 리스트 조회 */
 app.get('/', async (req, res) => {
+    const body = req.body;
+    const filter = req.query.filter;
 
+    const resBody = {msg: 'NOTIFICATION_READ_SUCCESS'};
+    try {
+        if (!filter) {
+            const [result, field] = await db.execute(`SELECT *
+                                                      FROM notification
+                                                      ORDER BY createdAt DESC`);
+            resBody['data'] = result;
+        } else {
+            const [result, field] = await db.execute(`SELECT *
+                                                      FROM notification WHERE notification_target = ?
+                                                      ORDER BY createdAt DESC`, [filter]);
+            resBody['data'] = result;
+        }
+
+        res.send(resBody);
+    } catch (e) {
+        console.log(e);
+    }
 })
 
 /** 사용자 아이디로 토큰 찾기 */
