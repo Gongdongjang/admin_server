@@ -60,6 +60,22 @@ app.get('/', async (req, res) => {
     }
 })
 
+
+/** 개별 알림 조회 */
+app.get('/:notificationId', async (req, res) => {
+    const notificationId = req.params.notificationId;
+    const resBody = {msg: 'NOTIFICATION_READ_SUCCESS'};
+
+    try {
+        const [result, field] = await db.execute(`SELECT *FROM notification WHERE notification_id = ?`, [notificationId]);
+        resBody['data'] = result[0];
+
+        res.send(resBody);
+    } catch (e) {
+        console.log(e);
+    }
+})
+
 /** 사용자 아이디로 토큰 찾기 */
 const getTokensByUser = async (userIds) => {
     let tokens = [];
