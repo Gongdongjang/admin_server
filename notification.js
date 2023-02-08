@@ -35,6 +35,16 @@ firebase.initializeApp({
     credential: firebase.credential.cert(firebaseCredential),
 });
 
+/** 알림을 보낼 사용자 조회 */
+app.get('/user', async (req, res) => {
+    try {
+        const [result, field] = await db.execute(`SELECT user_no, user_id, user_name FROM user`);
+        res.send({msg: 'USER_READ_SUCCESS', data: result});
+    } catch (e) {
+        console.log(e);
+    }
+})
+
 /** 알림 리스트 조회 */
 app.get('/', async (req, res) => {
     const body = req.body;
@@ -114,7 +124,7 @@ const createNotification = async (body) => {
 /** 토큰으로 알림 전송 */
 app.post('/token', upload.single('image'), async (req, res) => {
     const body = req.body;
-    const userIds = body.userIds;
+    const userIds = body.userIds.split(',');
     const tokens = await getTokensByUser(userIds);
 
     const title = body.title;
