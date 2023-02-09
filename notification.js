@@ -106,12 +106,11 @@ const createNotificationByUser = async (noticeId, userIds) => {
 }
 
 /** 알림 생성 */
-const createNotification = async (body) => {
+const createNotification = async (body, image) => {
     const title = body.title;
     const content = body.content;
     const type = body.type;
     const target = body.target;
-    const image = body.image;
     const pushType = body.pushType;
     const date = body.date;
 
@@ -124,15 +123,20 @@ const createNotification = async (body) => {
 /** 토큰으로 알림 전송 */
 app.post('/token', upload.single('image'), async (req, res) => {
     const body = req.body;
-    const userIds = body.userIds.split(',');
+    let userIds = req.body.userIds;
+    if (!Array.isArray(userIds)) {
+        userIds = userIds.split(',')
+    }
     const tokens = await getTokensByUser(userIds);
 
     const title = body.title;
     const content = body.content;
     const pushType = body.pushType;
+    let image = null;
+    if (req.file !== undefined) image = req.file.key;
 
     try {
-        const noticeResult = await createNotification(body);
+        const noticeResult = await createNotification(body, image);
 
         if (pushType === '실시간') {
             const message = {
@@ -173,9 +177,11 @@ app.post('/topic', upload.single('image'), async (req, res) => {
     const title = body.title;
     const content = body.content;
     const pushType = body.pushType;
+    let image = null;
+    if (req.file !== undefined) image = req.file.key;
 
     try {
-        const noticeResult = await createNotification(body);
+        const noticeResult = await createNotification(body, image);
 
         if (pushType === '실시간') {
             const message = {
