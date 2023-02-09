@@ -120,6 +120,74 @@ const createNotification = async (body, image) => {
     return result;
 }
 
+const createTokenMessage = (tokens, title, content, image) => {
+    let message;
+
+    if (image !== null) {
+        const url = encodeURI(`https://ggdjang.s3.ap-northeast-2.amazonaws.com/${image}`)
+        message = {
+            notification: {
+                title: title,
+                body: content,
+                imageUrl: url
+            },
+            data: {
+                title: title,
+                body: content
+            },
+            tokens: tokens
+        }
+    } else {
+        message = {
+            notification: {
+                title: title,
+                body: content
+            },
+            data: {
+                title: title,
+                body: content
+            },
+            tokens: tokens
+        }
+    }
+
+    return message;
+}
+
+const createTopicMessage = (topic, title, content, image) => {
+    let message;
+
+    if (image !== null) {
+        const url = encodeURI(`https://ggdjang.s3.ap-northeast-2.amazonaws.com/${image}`)
+        message = {
+            notification: {
+                title: title,
+                body: content,
+                imageUrl: url
+            },
+            data: {
+                title: title,
+                body: content
+            },
+            topic: topic
+        }
+    } else {
+        message = {
+            notification: {
+                title: title,
+                body: content
+            },
+            data: {
+                title: title,
+                body: content
+            },
+            topic: topic
+        }
+    }
+
+    return message;
+}
+
 /** 토큰으로 알림 전송 */
 app.post('/token', upload.single('image'), async (req, res) => {
     const body = req.body;
@@ -139,17 +207,7 @@ app.post('/token', upload.single('image'), async (req, res) => {
         const noticeResult = await createNotification(body, image);
 
         if (pushType === '실시간') {
-            const message = {
-                notification: {
-                    title: title,
-                    body: content
-                },
-                data: {
-                    title: title,
-                    body: content
-                },
-                tokens: tokens
-            }
+            const message = createTokenMessage(tokens, title, content, image);
 
             const msgResult = await firebase.messaging().sendMulticast(message);
             await createNotificationByUser(noticeResult.insertId, userIds);
@@ -184,18 +242,7 @@ app.post('/topic', upload.single('image'), async (req, res) => {
         const noticeResult = await createNotification(body, image);
 
         if (pushType === '실시간') {
-            const message = {
-                notification: {
-                    title: title,
-                    body: content
-                },
-                data: {
-                    title: title,
-                    body: content
-                },
-                /** 소비자 전체: userTopic */
-                topic: topic
-            }
+            const message = createTopicMessage(topic, title, content, image);
 
             const msgResult = await firebase.messaging().send(message);
 
