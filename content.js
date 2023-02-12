@@ -190,7 +190,7 @@ app.patch('/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 't
 
             if (photo_update) {
                 s3.deleteObject({
-                    Bucket: 'gdjang',
+                    Bucket: 'ggdjang',
                     Key: photo
                 }, (err, data) => {
                     if (err) console.log(err);
@@ -199,7 +199,7 @@ app.patch('/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 't
             }
             if (thumbnail_update) {
                 s3.deleteObject({
-                    Bucket: 'gdjang',
+                    Bucket: 'ggdjang',
                     Key: thumbnail
                 }, (err, data) => {
                     if (err) console.log(err);
@@ -208,7 +208,7 @@ app.patch('/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 't
             }
             if (main) {
                 s3.deleteObject({
-                    Bucket: 'gdjang',
+                    Bucket: 'ggdjang',
                     Key: main
                 }, (err, data) => {
                     if (err) console.log(err);
@@ -244,7 +244,7 @@ app.post('/delete', async (req, res) => {
             // 성공하면
             if (result) {
                 s3.deleteObject({
-                    Bucket: 'gdjang',
+                    Bucket: 'ggdjang',
                     Key: thumbnail
                 }, (err, data) => {
                     if (err) console.log(err);
@@ -254,7 +254,7 @@ app.post('/delete', async (req, res) => {
                 // 만약 첨부 사진이 있으면
                 if (photo) {
                     s3.deleteObject({
-                        Bucket: 'gdjang',
+                        Bucket: 'ggdjang',
                         Key: photo
                     }, (err, data) => {
                         if (err) console.log(err);
@@ -264,7 +264,7 @@ app.post('/delete', async (req, res) => {
 
                 if (main) {
                     s3.deleteObject({
-                        Bucket: 'gdjang',
+                        Bucket: 'ggdjang',
                         Key: main
                     }, (err, data) => {
                         if (err) console.log(err);
