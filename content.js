@@ -6,9 +6,6 @@ const multer = require('multer');
 const multer_s3 = require('multer-s3');
 const db = require('./db');
 
-// aws.config.update({})
-
-
 const s3 = new aws.S3({
     accessKeyId: aws_key.access,
     secretAccessKey: aws_key.secret,
@@ -88,12 +85,6 @@ app.get('/', async (req, res) => {
     }
     res.send(return_content);
 })
-
-// 임시 저장된 content 리스트
-// app.get('/tmp', async (req, res) => {
-//     const [contents, field] = await db.execute(`SELECT * FROM content WHERE is_tmp = 1 ORDER BY content_date DESC`);
-//     res.send(contents);
-// })
 
 // content 제목으로 검색
 app.get('/search', async (req, res) => {
@@ -290,6 +281,5 @@ app.post('/delete', async (req, res) => {
         res.status(400).send({msg: '잘못된 content 삭제 시도'});
     }
 })
-
 
 module.exports = app;
