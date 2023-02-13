@@ -7,6 +7,7 @@ const multer_s3 = require('multer-s3');
 const db = require('./db');
 const firebase = require('firebase-admin')
 const firebaseCredential = require('./config').firebase;
+const scheduler = require('node-schedule');
 
 app.use(express.json())
 
@@ -99,9 +100,14 @@ const getTokensByUser = async (userIds) => {
 }
 
 /** 사용자별 알림 리스트 생성 */
-const createNotificationByUser = async (noticeId, userIds) => {
+const createNotificationByUser = async (noticeId, userIds, status) => {
     for (let userId of userIds) {
-        await db.execute(`INSERT INTO notification_by_user (notification_user, notification_id) VALUES (?, ?)`, [userId, noticeId]);
+        if (status === 'SENT')
+            await db.execute(`INSERT INTO notification_by_user (notification_user, notification_id) VALUES (?, ?)`,
+                [userId, noticeId]);
+        else
+            await db.execute(`INSERT INTO notification_by_user (notification_user, notification_id, status) VALUES (?, ?, ?)`,
+                [userId, noticeId, 'SCHEDULED']);
     }
 }
 
@@ -210,7 +216,7 @@ app.post('/token', upload.single('image'), async (req, res) => {
             const message = createTokenMessage(tokens, title, content, image);
 
             const msgResult = await firebase.messaging().sendMulticast(message);
-            await createNotificationByUser(noticeResult.insertId, userIds);
+            await createNotificationByUser(noticeResult.insertId, userIds, 'SENT');
 
             res.send({
                 msg: "NOTIFICATION_SEND_SUCCESS",
@@ -220,6 +226,7 @@ app.post('/token', upload.single('image'), async (req, res) => {
                 }}
             );
         } else {
+            await createNotificationByUser(noticeResult.insertId, userIds, 'SCHEDULED');
             res.send({msg: "NOTIFICATION_RESERVE_SUCCESS"});
         }
     } catch (e) {
@@ -241,17 +248,17 @@ app.post('/topic', upload.single('image'), async (req, res) => {
     try {
         const noticeResult = await createNotification(body, image);
 
+        const [userResult, field] = await db.execute('SELECT user_no FROM user');
+        let userIds = [];
+        for (let user of userResult) {
+            userIds.push(user.user_no);
+        }
+
         if (pushType === '실시간') {
             const message = createTopicMessage(topic, title, content, image);
 
             const msgResult = await firebase.messaging().send(message);
-
-            const [userResult, field] = await db.execute('SELECT user_no FROM user');
-            let userIds = [];
-            for (let user of userResult) {
-                userIds.push(user.user_no);
-            }
-            await createNotificationByUser(noticeResult.insertId, userIds);
+            await createNotificationByUser(noticeResult.insertId, userIds, 'SENT');
 
             res.send({
                 msg: "NOTIFICATION_SEND_SUCCESS",
@@ -261,6 +268,7 @@ app.post('/topic', upload.single('image'), async (req, res) => {
                 }}
             );
         } else {
+            await createNotificationByUser(noticeResult.insertId, userIds, 'SCHEDULED');
             res.send({msg: "NOTIFICATION_RESERVE_SUCCESS"});
         }
     } catch (e) {
