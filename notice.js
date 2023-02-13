@@ -29,6 +29,17 @@ const upload = multer({
 
 app.use(express.json());
 
+/** 특정 notice 가져오기 */
+app.get('/:noticeId', async (req, res) => {
+    const noticeId = req.params.noticeId;
+
+    const [notice, fields] = await db.execute(`SELECT * FROM notice WHERE notice_id = ?`, [noticeId]);
+    res.send({
+        msg: 'NOTICE_READ_SUCCESS',
+        data: notice[0]
+    });
+})
+
 // notice 가져오기
 app.get('/', async (req, res) => {
     try {
