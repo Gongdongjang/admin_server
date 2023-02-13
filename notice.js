@@ -13,7 +13,7 @@ const s3 = new aws.S3({
 });
 const storage = multer_s3({
     s3: s3,
-    bucket: 'gdjang',
+    bucket: 'ggdjang',
     contentType: multer_s3.AUTO_CONTENT_TYPE,
     acl: 'public-read',
     metadata: function(req, file, cb) {
@@ -78,7 +78,7 @@ app.post('/delete', async (req, res) => {
             if (result) {
                 if (photo) {
                     s3.deleteObject({
-                        Bucket: 'gdjang',
+                        Bucket: 'ggdjang',
                         Key: photo
                     }, (err, data) => {
                         if (err) console.log(err);
