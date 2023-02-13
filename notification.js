@@ -276,4 +276,39 @@ app.post('/topic', upload.single('image'), async (req, res) => {
     }
 })
 
+/** 매 정각에 예약된 알림(현재 시간 ~ 현재 시간 + 1시간 사이) 확인 후 발송 */
+scheduler.scheduleJob('0 * * * *', async () => {
+    const [notifications, field] = await db.execute(`SELECT notification_id, notification_target, notification_title, notification_content FROM notification 
+                                                                  WHERE notification_push_type = ? AND notification_date BETWEEN NOW() and NOW() + INTERVAL 1 HOUR`, ['예약']);
+
+    for (const notification of notifications) {
+        const notificationId = notification.notification_id;
+        const target = notification.notification_target;
+        const title = notification.notification_title;
+        const content = notification.notification_content;
+        const image = notification.notification_img;
+
+        const [users, fields] = await db.execute(`SELECT notification_user FROM notification_by_user WHERE notification_id = ?`, [notificationId]);
+        let userIds = [];
+        for (let user of users) {
+            userIds.push(user.notification_user);
+        }
+
+        if (target === '개인') {
+            const tokens = await getTokensByUser(userIds);
+
+            const message = createTokenMessage(tokens, title, content, image);
+            const msgResult = await firebase.messaging().sendMulticast(message);
+            console.log(msgResult);
+        } else if (target === '소비자') {
+            const message = createTopicMessage('userTopic', title, content, image);
+            const msgResult = await firebase.messaging().send(message);
+            console.log(msgResult);
+        }
+        // TODO: 관리자 알림 개발 완료 후 추가
+
+        await db.execute(`UPDATE notification_by_user SET status = ? WHERE notification_id = ?`, ['SENT', notificationId]);
+    }
+})
+
 module.exports = app;
