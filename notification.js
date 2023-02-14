@@ -276,10 +276,10 @@ app.post('/topic', upload.single('image'), async (req, res) => {
     }
 })
 
-/** 매 정각에 예약된 알림(현재 시간 ~ 현재 시간 + 1시간 사이) 확인 후 발송 */
+/** 매 정각에 예약된 알림(정각 ~ 5분 사이) 확인 후 발송 */
 scheduler.scheduleJob('0 * * * *', async () => {
     const [notifications, field] = await db.execute(`SELECT notification_id, notification_target, notification_title, notification_content FROM notification 
-                                                                  WHERE notification_push_type = ? AND notification_date BETWEEN NOW() and NOW() + INTERVAL 1 HOUR`, ['예약']);
+                                                                  WHERE notification_push_type = ? AND notification_date BETWEEN NOW() and NOW() + INTERVAL 5 MINUTE`, ['예약']);
 
     for (const notification of notifications) {
         const notificationId = notification.notification_id;
