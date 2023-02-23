@@ -31,7 +31,7 @@ app.post('/', async (req, res) => {
                         name: user[0].admin_name
                     },
                     jwt_secret,
-                    {expiresIn: '1h'}
+                    {expiresIn: '14h'}
                 );
                 const refresh_token = await jwt.sign(
                     {
