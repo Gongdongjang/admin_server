@@ -11,29 +11,6 @@ app.use(express.urlencoded({ extended: true }));
 let insertId;
 
 //읽어오기
-/*
-app.get('/', async(req, res) => { // 모든 md
- 
-    try {//최근등록순
-      let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id ORDER BY md.md_id desc");
-      res.send(rows);
-      } 
-      catch (e) {
-          console.log(e);
-      }
-    
-});
-app.get('/MD/MDResult', async(req, res) => { //확정,실패,종료된 모든 md
- 
-    try {//최근등록순
-      let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_result is not null ORDER BY md.md_id desc");
-       res.send(rows);
-      } 
-    catch (e) {
-      console.log(e);
-      }
-          
-});  */ 
 app.get('/:md_id', async (req, res) => {//특정 md만 get
     const md_id = req.params.md_id;
     
@@ -149,6 +126,8 @@ app.post("/update/:md_id", async(req, res) => { //특정 md 수정
     const puStart =body.puStart ;
     const puEnd =body.puEnd ;
     const puWaybill=body.puWaybill;
+    const puTimeStart=body.puTimeStart;
+    const puTimeEnd=body.puTimeEnd;
     console.log("날짜 : "+start+" "+end+" "+puStart+" "+puEnd+" "+puWaybill);
     try{
         //search id
@@ -167,8 +146,8 @@ app.post("/update/:md_id", async(req, res) => { //특정 md 수정
          [price, comp, dc,  MDID ]);
 
         //edit pickup table
-        const [result3] = await db.execute('update pickup set pu_start=?, pu_end=?, store_id=? ,pu_waybill=? where md_id=?',
-         [puStart, puEnd, storeId ,puWaybill, MDID]);
+        const [result3] = await db.execute('update pickup set pu_start=?, pu_end=?, store_id=? ,pu_waybill=? ,pu_timeStart=?, pu_timeEnd=? where md_id=?',
+         [puStart, puEnd, storeId ,puWaybill,puTimeStart,puTimeEnd, MDID]);
         
         //edit stock table
         const [result4] = await db.execute('update stock set stk_goal=?,  stk_confirm=? where md_id=?',
@@ -188,6 +167,7 @@ app.post("/cancle/:md_id", async(req, res) => { //특정 md 종료시키기
     try{
         //edit MD table
         const [result1] = await db.execute('update md set md_result=2 where md_id=?', [MDID]);  
+        console.log("종료");
     }
     catch(err){
         console.log(err);
@@ -224,6 +204,8 @@ app.post('/post', async(req, res)=>{ //md 등록
     const puStart =body.puStart ;
     const puEnd =body.puEnd ;
     const puWaybill=body.puWaybill;
+    const puTimeStart=body.puTimeStart;
+    const puTimeEnd=body.puTimeEnd;
 
     try{
         //search id
@@ -244,10 +226,10 @@ app.post('/post', async(req, res)=>{ //md 등록
          [price, comp, dc, insertId ]);
 
         //insert pickup table
-        const [result3] = await db.execute('INSERT INTO pickup(pu_start,pu_end,md_id,store_id,pu_waybill) VALUES (?, ?, ?, ?, ?)',
-         [puStart, puEnd, insertId, storeId ,puWaybill]);
+        const [result3] = await db.execute('INSERT INTO pickup(pu_start,pu_end,md_id,store_id,pu_waybill,pu_timeStart,pu_timeEnd) VALUES (?, ?, ?, ?, ?,?,?)',
+         [puStart, puEnd, insertId, storeId ,puWaybill,puTimeStart,puTimeEnd]);
         
-        //insert stock table                                          //남은 재고 //주문 총량//성공 야부
+        //insert stock table                                          //남은 재고 //주문 총량//성공 여부
         const [result4] = await db.execute('insert into stock(stk_goal,stk_remain,stk_total,stk_confirm,md_id) VALUES (?, ?, ?, ?,  ?)',
          [goal, goal, 0, stkConfirm,  insertId ]);
         
@@ -301,6 +283,7 @@ app.get('/sort/:sort', async(req, res) => { // md 정렬
         try {//최근등록순 
           //제일 처음 출력-초기화과정
          // 공구 성공 기준 넘으면 공구결과 성공으로 수정
+         //진행기간이 끝나지않은 상품은 공구 종료되지않음
          // select case md_result when stk_total>=(stk_goal*0.3) then 0 else 1 end from md join stock on md.md_id=stock.md_id;
           await db.execute("set sql_safe_updates=0");
           await db.execute("update md inner join stock on md.md_id=stock.md_id set  md_result= case when md_end >= now() then null when md_result=2 then 2 when stk_total>=(stk_goal*0.3) then 1 else 0 end ");
@@ -308,7 +291,7 @@ app.get('/sort/:sort', async(req, res) => { // md 정렬
           await db.execute('update stock inner join md on md.md_id=stock.md_id join pickup on md.md_id=pickup.md_id set  stk_confirm = case when md_result = 0 then "공구 취소" when pu_end<now() then "픽업완료"  when md_end<now() then "공동구매 완료" else "공동구매 진행중"end ');
   
           //등록순 출력
-          let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_result is null ORDER BY md.md_id desc");
+          let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_result is null || md.md_result =1 ORDER BY md.md_id desc");
           res.send(rows);
           } 
           catch (e) {
@@ -318,7 +301,7 @@ app.get('/sort/:sort', async(req, res) => { // md 정렬
   
       case 'alphabet':
         try {//가나다라순
-          let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_result is null ORDER BY md.md_name ASC");
+          let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_result is null || md.md_result =1 ORDER BY md.md_name ASC");
           res.send(rows);
           } 
           catch (e) {
@@ -328,7 +311,7 @@ app.get('/sort/:sort', async(req, res) => { // md 정렬
       
       case 'deadline':
         try {//마감임박순
-          let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_result is null ORDER BY md.md_end asc");
+          let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_result is null || md.md_result =1 ORDER BY md.md_end asc");
           res.send(rows);
           } 
           catch (e) {
@@ -338,23 +321,33 @@ app.get('/sort/:sort', async(req, res) => { // md 정렬
   
         case 'number':
           try {//상품번호순
-            let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_result is null");
+            let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_result is null || md.md_result =1");
             res.send(rows);
             } 
             catch (e) {
                 console.log(e);
             }
           break;
-    
-        case 'counts':
-          try {//조회수 높은 순
-            let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_result is null ORDER BY md.md_views desc");
-            res.send(rows);
-            } 
-            catch (e) {
-                console.log(e);
-            }
-          break;
+        
+          case 'pickup':
+            try {//픽업중
+              let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id join stock on md.md_id=stock.md_id join payment on md.md_id=payment.md_id where pu_start<=now() and pu_end>=now() and md_result=1;");
+              res.send(rows);
+              } 
+              catch (e) {
+                  console.log(e);
+              }
+            break;
+            
+          case 'done':
+            try {//진행확정
+              let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md_result=1;");
+              res.send(rows);
+              } 
+              catch (e) {
+                  console.log(e);
+              }
+            break;
         
     }
   });
@@ -365,7 +358,7 @@ app.get('/sort/:sort', async(req, res) => { // md 정렬
         case 'recent':
           try {
             //최근등록순 출력
-            let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_result is not null ORDER BY md.md_id desc");
+            let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_result =0 || md.md_result =2 ORDER BY md.md_id desc");
             res.send(rows);
             } 
             catch (e) {
@@ -373,25 +366,7 @@ app.get('/sort/:sort', async(req, res) => { // md 정렬
             }
           break;
     
-        case 'pickup':
-          try {//픽업중
-            let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id join stock on md.md_id=stock.md_id join payment on md.md_id=payment.md_id where pu_start<=now() and pu_end>=now() and md_result=1;");
-            res.send(rows);
-            } 
-            catch (e) {
-                console.log(e);
-            }
-          break;
-          
-        case 'done':
-          try {//진행확정
-            let [rows, fields] = await db.execute("select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md_result=1;");
-            res.send(rows);
-            } 
-            catch (e) {
-                console.log(e);
-            }
-          break;
+       
     
           case 'cancle':
             try {//진행취소

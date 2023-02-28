@@ -39,7 +39,11 @@ app.get('/read/farm/:farm_id', async (req, res) => {//특정 농가만 get
     const farm_id = req.params.farm_id;
     
     try{
-      
+      //농가별 진행한 공구 횟수 count
+      let [row1, field1] = await db.execute(`SELECT COUNT(case when farm_id=? then 1 end) as farmCount  FROM md;`, [farm_id]);
+      let farmCount=row1[0].farmCount;
+      console.log(row1);
+      await db.execute('update farm set farm_saleQty=? where farm_id=?', [farmCount,farm_id]);
       let [row2, field] = await db.execute(`select * from farm join Hours on farm.farm_id=Hours.hours_PartnerId   where farm.farm_id=? and Hours.hours_partner=0`, [farm_id]);
       res.send(row2);
       console.log(row2);
@@ -51,7 +55,11 @@ app.get('/read/farm/:farm_id', async (req, res) => {//특정 농가만 get
 app.get('/read/farm/imgs/:farm_id', async (req, res) => {//특정 농가의 이미지만
     const farm_id = req.params.farm_id;//`select * from md  where md_id=?`, [md_id]
     try{
-      const [row23, field] = await db.execute(`select farm_thumbnail, farm_mainImg, farm_detailImg from farm where farm_id = ?`,[farm_id]);
+      //농가별 진행한 공구 횟수 count
+    let [row1, field1] = await db.execute(`SELECT COUNT(case when farm_id=? then 1 end) as farmCount  FROM md;`, [farm_id]);
+    let farmCount=row1[0].farmCount;
+    await db.execute('update farm set farm_saleQty=? where farm_id=?', [farmCount,farm_id]);
+      const [row23, field] = await db.execute(`select farm_saleQty,farm_thumbnail, farm_mainImg, farm_detailImg from farm where farm_id = ?`,[farm_id]);
       res.send(row23);
       //console.log(row23);
     }
@@ -85,7 +93,9 @@ app.get('/read/store/imgs/:store_id', async (req, res) => {//특정 상가의 �
     }
   }); //****
   app.get('/md/farm/:farm_id', async (req, res) => {//농가에서 진행했던 md
+    
     const farm_id = req.params.farm_id;
+    
     const [row3, field] = await db.execute(`select md_name,md.md_id,stk_confirm from md  join stock on md.md_id=stock.md_id where farm_id=?`,[farm_id]);
     
     res.send(row3);
