@@ -4,9 +4,8 @@ const app = express();
 
 const cors = require('cors');
 const read = require('./read');
-const post = require('./post');
-const edit = require('./edit');
-const search = require('./search');
+
+
 const md = require('./md');
 const partner = require('./partner');
 const review = require('./review');
@@ -30,5 +29,23 @@ app.listen(PORT, function() {
     console.log("start! express server on port 5000")
 })
 
+const login_register = require('./login');
+const notificationRegister = require('./notification');
+const notice_register = require('./notice');
+const content_register = require('./content');
+//const cors = require('cors');
+const auth_middleware = require('./auth_middleware');
 
+app.use(cors());
+app.use(auth_middleware);
+app.use('/api/login', login_register);
+app.use('/api/notification', notificationRegister);
+app.use('/api/notice', notice_register);
+app.use('/api/content', content_register);
+
+app.get('/api', async (req, res) => {
+    res.send(req.decode);
+})
+
+//app.listen(5000);
 
