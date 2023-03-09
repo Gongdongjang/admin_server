@@ -41,8 +41,8 @@ app.post('/', async (req, res) => {
                     {expiresIn: '14d'}
                 )
 
-                res.cookie('access_token', access_token, {httpOnly: true, maxAge: 60000 * 60});
-                res.cookie('refresh_token', refresh_token, {httpOnly: true, maxAge: 60000 * 60 * 24 * 14});
+                res.cookie('access_token', access_token, {httpOnly: false, maxAge: 60000 * 60});
+                res.cookie('refresh_token', refresh_token, {httpOnly: false, maxAge: 60000 * 60 * 24 * 14});
                 res.send({
                     access_token: access_token,
                     refresh_token: refresh_token
