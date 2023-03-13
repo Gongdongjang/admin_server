@@ -126,7 +126,7 @@ const createNotification = async (body, image) => {
     return result;
 }
 
-const createTokenMessage = (tokens, title, content, image) => {
+const createTokenMessage = (userIds, tokens, title, content, image) => {
     let message;
 
     if (image !== null) {
@@ -139,7 +139,8 @@ const createTokenMessage = (tokens, title, content, image) => {
             },
             data: {
                 title: title,
-                body: content
+                body: content,
+                userId: userIds
             },
             tokens: tokens
         }
@@ -151,7 +152,8 @@ const createTokenMessage = (tokens, title, content, image) => {
             },
             data: {
                 title: title,
-                body: content
+                body: content,
+                uerId: userIds
             },
             tokens: tokens
         }
@@ -213,7 +215,7 @@ app.post('/token', upload.single('image'), async (req, res) => {
         const noticeResult = await createNotification(body, image);
 
         if (pushType === '실시간') {
-            const message = createTokenMessage(tokens, title, content, image);
+            const message = createTokenMessage(userIds, tokens, title, content, image);
 
             const msgResult = await firebase.messaging().sendMulticast(message);
             await createNotificationByUser(noticeResult.insertId, userIds, 'SENT');
