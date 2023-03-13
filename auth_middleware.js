@@ -18,7 +18,7 @@ const checkPass = (req) => {
     if (req.originalUrl.indexOf('/login') !== -1){
         return true;
     }
-    if (req.method === 'GET' && req.originalUrl === '/api/content') {
+    if (req.method === 'GET' && (req.originalUrl === '/api/content' || req.originalUrl === '/api/content/banner')) {
         return true;
     }
 }
