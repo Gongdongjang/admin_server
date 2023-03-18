@@ -128,6 +128,7 @@ const createNotification = async (body, image) => {
 
 const createTokenMessage = (userIds, tokens, title, content, image) => {
     let message;
+    console.log(tokens);
 
     if (image !== null) {
         const url = encodeURI(`https://ggdjang.s3.ap-northeast-2.amazonaws.com/${image}`)
@@ -140,7 +141,7 @@ const createTokenMessage = (userIds, tokens, title, content, image) => {
             data: {
                 title: title,
                 body: content,
-                userId: userIds
+                // userId: userIds
             },
             tokens: tokens
         }
@@ -153,7 +154,7 @@ const createTokenMessage = (userIds, tokens, title, content, image) => {
             data: {
                 title: title,
                 body: content,
-                uerId: userIds
+                // uerId: userIds
             },
             tokens: tokens
         }
