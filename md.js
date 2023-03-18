@@ -80,7 +80,7 @@ app.get('/all/store', async (req, res) => {//모든 상점 이름만 출력
 //스토어 앱()
 app.get("/test", async (req, res, next) => { 
   try {
-     const [test] = await db.execute(`select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_id= ${2}`);
+     const [test] = await db.execute(`select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id where md.md_id= 2`);
      
      resultCode = 200;
      message = "item get 성공";
