@@ -108,7 +108,9 @@ app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', m
     const context = body.context;
     const upload_type = body.upload_type;
     const upload_date = body.upload_date;
-    const link = body.link;
+    // const link = body.link;
+    const md1 = body.md1;
+    const md2 = body.md2;
     const category = body.category;
     const is_tmp = body.is_tmp === 'true';
     let photo;
@@ -131,8 +133,8 @@ app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', m
     }
 
     try {
-        const [result] = await db.execute(`INSERT INTO content(content_title, content_context, content_photo, content_link, content_thumbnail, is_tmp, upload_type, upload_date, content_main, content_category)
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [title, context, photo, link, thumbnail, is_tmp, upload_type, upload_date, main, category]);
+        const [result] = await db.execute(`INSERT INTO content(content_title, content_context, content_photo, content_thumbnail, is_tmp, upload_type, upload_date, content_main, content_category, content_md_id1, content_md_id2)
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [title, context, photo, thumbnail, is_tmp, upload_type, upload_date, main, category, md1, md2]);
         res.send({id: result.insertId});
     } catch (e) {
         console.log(e);
