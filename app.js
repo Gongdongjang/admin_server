@@ -4,22 +4,15 @@ const app = express();
 
 const cors = require('cors');
 const read = require('./read');
-
-
 const md = require('./md');
 const partner = require('./partner');
 const review = require('./review');
+const store = require('./admin_app');
 
 const PORT = 5000;
 
-//app.use(cors());
-//app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+app.use('/api/admin', store);
 app.use('/api/read', read);
-//app.use('/api/post', post);
-//app.use('/api/edit', edit);/
-//app.use('/api/search', search);
-
-
 app.use('/api/md', md);
 app.use('/api/partner', partner);
 app.use('/api/review', review);

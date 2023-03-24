@@ -162,89 +162,8 @@ app.post("/farm/update/:farm_id", async(req, res) => { //특정 농가 수정
          res.send( "server error");
      }
 });
-// content 수정
-app.patch('/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', maxCount: 1}, {name: 'main', maxCount: 1}]), async (req, res) => {
-  const content_id = req.params.content_id;
-  let body = req.body;
-  body.is_tmp = body.is_tmp === 'true';
-  let photo_update = false;
-  let thumbnail_update = false;
-  let main_update = false;
 
-  // 요청하는 것만 update
-  let sql_key = Object.keys(body).map((key) => {
-      if (key !== 'is_tmp' && !key.includes('upload')) return `content_${key} = ?`;
-      else return `${key} = ?`
-  }).join(", ");
-  let sql_parameter = [...Object.values(body)];
-  // 사진 수정 요청
-  if (req.files['photo'] !== undefined) {
-      if (sql_key) sql_key += ', content_photo = ?';
-      else sql_key = 'content_photo = ?';
-      sql_parameter.push(req.files['photo'][0].key);
-      photo_update = true;
-  }
-  // 썸네일 수정 요청
-  if (req.files['thumbnail'] !== undefined) {
-      if (sql_key) sql_key += ', content_thumbnail = ?';
-      else sql_key = 'content_thumbnail = ?';
-      sql_parameter.push(req.files['thumbnail'][0].key);
-      thumbnail_update = true;
-  }
-  // 메인 사진 수정 요청
-  if (req.files['main'] !== undefined) {
-      if (sql_key) sql_key += ', content_main = ?';
-      else sql_key = 'content_main = ?';
-      sql_parameter.push(req.files['main'][0].key);
-      main_update = true;
-  }
-  sql_parameter.push(content_id);
 
-  try {
-      const [content, field] = await db.execute(`SELECT * FROM content WHERE content_id = ?`, [content_id]);
-      const [result] = await db.execute(`UPDATE content SET ${sql_key} WHERE content_id = ?`, sql_parameter);
-
-      // 사진이나 썸네일/메인 수정 시, s3에서 이전 사진/썸네일/메인 삭제
-      if (photo_update || thumbnail_update || main_update) {
-          const photo = content[0].content_photo;
-          const thumbnail = content[0].content_thumbnail;
-          const main = content[0].content_main;
-
-          if (photo_update) {
-              s3.deleteObject({
-                  Bucket: 'ggdjang',
-                  Key: photo
-              }, (err, data) => {
-                  if (err) console.log(err);
-                  else console.log(data);
-              });
-          }
-          if (thumbnail_update) {
-              s3.deleteObject({
-                  Bucket: 'ggdjang',
-                  Key: thumbnail
-              }, (err, data) => {
-                  if (err) console.log(err);
-                  else console.log(data);
-              });
-          }
-          if (main) {
-              s3.deleteObject({
-                  Bucket: 'ggdjang',
-                  Key: main
-              }, (err, data) => {
-                  if (err) console.log(err);
-                  else console.log(data);
-              });
-          }
-      }
-      res.send(result);
-  } catch (e) {
-      console.log(e);
-  }
-  console.log(sql_key);
-  console.log(sql_parameter);
-})
 app.post("/store/update/:store_id", async(req, res) => { //특정 상점 수정
 
     const StoreID = req.params.store_id;
