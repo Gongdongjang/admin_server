@@ -13,9 +13,22 @@ const get_cookies = (req) => {
 
 };
 
+/** 로그인, 콘텐츠 조회는 토큰 필요 없게 처리 */
+const checkPass = (req) => {
+    if (req.originalUrl.indexOf('/login') !== -1){
+        return true;
+    }
+    if (req.originalUrl.indexOf('/signup') !== -1){
+        return true;
+    }
+    if (req.method === 'GET' && (req.originalUrl === '/api/content' || req.originalUrl === '/api/content/banner')) {
+        return true;
+    }
+}
+
 const auth_middleware = async (req, res, next) => {
-    if (req.originalUrl.indexOf('/login') !== -1 || req.originalUrl.indexOf('/signup') !== -1) { // 로그인 관련 시도는 auth_middleware 통과하게
-        console.log('login pass');
+    if (checkPass(req)) {
+        console.log(`${req.originalUrl} pass`);
         next();
     } else {
         let token = get_cookies(req);
