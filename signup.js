@@ -21,8 +21,9 @@ app.post('/', async (req, res) => {
         const [result] = await db.execute(`INSERT INTO admin_user (admin_id, password, admin_name, mobile_number) VALUES (?, ?, ?, ?)`,
             [id, encode_pwd, nickname, phone_number]);
         res.send({ id: result.insertId });
+        console.log(`SIGNUP_SUCCESS :: userID = {${result.insertId}}` );
     } catch (e) {
-        console.log(e);
+        console.log(`SIGNUP_FAILED :: msg = ${e}`);
         res.status(500).send({ msg: 'signup error'});
     }
 })
@@ -38,8 +39,10 @@ app.post('/id-check', async (req, res) => {
         // id가 이미 존재하면 is_valid 는 false
         if (result.length !== 0) is_valid = false;
         res.send({ is_valid: is_valid });
+        console.log(`ID_CHECK_SUCCESS`);
     } catch (e) {
         res.status(500).send({ msg: 'server error' });
+        console.log(`ID_CHECK_FAILED :: msg = ${e}`);
     }
 })
 
@@ -70,7 +73,6 @@ function makeSignature(time) {
 app.post('/phone-check', async (req, res) => {
     const body = req.body;
     const phone_number = body.phone_number;
-    console.log(body);
 
     const sms_url = `https://sens.apigw.ntruss.com/sms/v2/services/${naver.id}/messages`;
     const time_stamp = Date.now().toString();
@@ -103,8 +105,9 @@ app.post('/phone-check', async (req, res) => {
                 UPDATE code = ?, expire = NOW() + INTERVAL 3 MINUTE`,
             [phone_number, code, code]);
         res.send({  msg: 'success'  });
+        console.log(`SMS_SEND_SUCCESS :: phoneNumber = ${phone_number}`);
     } catch (e) {
-        console.log(e);
+        console.log(`SMS_SEND_FAILED :: msg = ${e}`);
         res.status(500).send({ msg: 'server error' });
     }
 })
@@ -116,7 +119,6 @@ app.post('/phone-check/verify', async (req, res) => {
 
     let phone_valid = false;
 
-    console.log(code);
     try {
         const [result, field] = await db.execute(`SELECT *
                                                   FROM sms_validation
@@ -129,8 +131,9 @@ app.post('/phone-check/verify', async (req, res) => {
         }
 
         res.send({phone_valid: phone_valid});
+        console.log(`SMS_VERIFY_SUCCESS :: phoneNumber = ${phone_number}`);
     } catch (e) {
-        console.log(e);
+        console.log(`SMS_VERIFY_FAILED :: msg = ${e}`);
         res.status(500).send({ msg: 'server error' });
     }
 })
@@ -145,15 +148,18 @@ app.post('/unique-number', async (req, res) => {
 
         if (result.length === 0) {
             res.status(400).send({msg: 'STORE_NOT_FOUND'});
+            console.log(`STORE_NOT_FOUND :: storeName = ${storeName}`);
         } else if (uniqueNumber === result[0].store_number) {
+            console.log(`UNIQUE_VERIFY_SUCCESS :: storeName = ${storeName}`);
             res.send({
                 msg: 'UNIQUE_NUMBER_VERIFY_SUCCESS',
             });
         } else {
+            console.log(`UNIQUE_VERIFY_FAILED :: storeName = ${storeName}`);
             res.status(400).send({msg: 'UNIQUE_NUMBER_VERIFY_FAIL'});
         }
     } catch (e) {
-        console.log(e);
+        console.log(`UNIQUE_VERIFY_FAILED :: msg = ${e}`);
         res.status(500).send({msg: 'SERVER_ERROR'});
     }
 })
