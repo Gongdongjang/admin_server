@@ -28,7 +28,7 @@ const checkPass = (req) => {
 
 const auth_middleware = async (req, res, next) => {
     if (checkPass(req)) {
-        console.log(`${req.originalUrl} pass`);
+        console.log(`AUTH_PASS :: url = ${req.originalUrl}`);
         next();
     } else {
         let token = get_cookies(req);
