@@ -78,26 +78,26 @@ app.post('/phone-check', async (req, res) => {
     let code = '';
     for (let i = 0; i < 6; i++) code += Math.floor(Math.random() * 10);
     try {
-        // const sms_res = await axios.post(sms_url, {
-        //         "type":"SMS",
-        //         "from":"01099263238",
-        //         "countryCode": "82",
-        //         "content":`공동장 인증번호는 [${code}]입니다.`,
-        //         "messages":[
-        //             {
-        //                 "to": phone_number,
-        //                 "content":`공동장 인증번호는 [${code}]입니다.`
-        //             }
-        //         ]
-        //     }, {
-        //         headers: {
-        //             'Content-Type': 'application/json; charset=utf-8',
-        //             'x-ncp-apigw-timestamp': time_stamp,
-        //             'x-ncp-iam-access-key': naver.access,
-        //             'x-ncp-apigw-signature-v2': signature
-        //         }
-        //     }
-        // )
+        const sms_res = await axios.post(sms_url, {
+                "type":"SMS",
+                "from":"01099263238",
+                "countryCode": "82",
+                "content":`공동장 인증번호는 [${code}]입니다.`,
+                "messages":[
+                    {
+                        "to": phone_number,
+                        "content":`공동장 인증번호는 [${code}]입니다.`
+                    }
+                ]
+            }, {
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'x-ncp-apigw-timestamp': time_stamp,
+                    'x-ncp-iam-access-key': naver.access,
+                    'x-ncp-apigw-signature-v2': signature
+                }
+            }
+        )
         const [result] = await db.execute(`INSERT INTO sms_validation(phone_number, code, expire)
                                            VALUES (?, ?, NOW() + INTERVAL 3 MINUTE) ON DUPLICATE KEY
                 UPDATE code = ?, expire = NOW() + INTERVAL 3 MINUTE`,
