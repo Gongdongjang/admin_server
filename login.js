@@ -14,42 +14,50 @@ app.post('/', async (req, res) => {
     const password = body.password;
 
     if (id === undefined || password === undefined) {
+        console.log(`LOGIN_FAILED :: userID = {${id}}`);
         res.send({access_token: 'false'});
     } else {
-        const [user, field] = await db.execute(`SELECT * FROM admin_user WHERE admin_id = ?`, [id]);
+        try {
+            const [user, field] = await db.execute(`SELECT * FROM admin_user WHERE admin_id = ?`, [id]);
 
-        if (user.length === 0) {
-            res.send({access_token: 'id_false'});
-        } else {
-            const encode_pwd = await bcrypt.compare(password, user[0].password);
-
-            if (encode_pwd) {
-                const access_token = await jwt.sign(
-                    {
-                        id: user[0].admin_id,
-                        nickname: user[0].nickname,
-                        name: user[0].admin_name
-                    },
-                    jwt_secret,
-                    {expiresIn: '1d'}
-                );
-                const refresh_token = await jwt.sign(
-                    {
-                        id: user[0].admin_id
-                    },
-                    jwt_secret,
-                    {expiresIn: '14d'}
-                )
-
-                res.cookie('access_token', access_token, {httpOnly: false, maxAge: 60000 * 60});
-                res.cookie('refresh_token', refresh_token, {httpOnly: false, maxAge: 60000 * 60 * 24 * 14});
-                res.send({
-                    access_token: access_token,
-                    refresh_token: refresh_token
-                });
+            if (user.length === 0) {
+                res.send({access_token: 'id_false'});
             } else {
-                res.send({access_token: 'pwd_false'});
+                const encode_pwd = await bcrypt.compare(password, user[0].password);
+
+                if (encode_pwd) {
+                    const access_token = await jwt.sign(
+                        {
+                            id: user[0].admin_id,
+                            nickname: user[0].nickname,
+                            name: user[0].admin_name
+                        },
+                        jwt_secret,
+                        {expiresIn: '1d'}
+                    );
+                    const refresh_token = await jwt.sign(
+                        {
+                            id: user[0].admin_id
+                        },
+                        jwt_secret,
+                        {expiresIn: '14d'}
+                    )
+
+                    res.cookie('access_token', access_token, {httpOnly: false, maxAge: 60000 * 60});
+                    res.cookie('refresh_token', refresh_token, {httpOnly: false, maxAge: 60000 * 60 * 24 * 14});
+
+                    console.log(`LOGIN_SUCCESS :: userID = {${id}}`);
+                    res.send({
+                        access_token: access_token,
+                        refresh_token: refresh_token
+                    });
+                } else {
+                    console.log(`LOGIN_FAILED :: userID = {${id}}`);
+                    res.send({access_token: 'pwd_false'});
+                }
             }
+        } catch (e) {
+            console.log(`LOGIN_FAILED :: msg = {${e}}`);
         }
     }
 })
@@ -88,11 +96,14 @@ app.get('/refresh', async (req, res) => {
             );
 
             res.cookie('access_token', access_token, {httpOnly: true, maxAge: 60000 * 60, overwrite: true});
+
+            console.log(`REFRESH_SUCCESS ::`);
             res.send({
                 access_token: access_token,
                 refresh_token: refresh_token
             })
         } catch (e) {
+            console.log(`REFRESH_FAILED :: msg = {${e}}`);
             res.status(401).send({msg: "retry login"});
         }
     }
@@ -102,6 +113,8 @@ app.get('/refresh', async (req, res) => {
 app.post('/logout', async (req, res) => {
     res.clearCookie('access_token');
     res.clearCookie('refresh_token');
+
+    console.log(`LOGOUT_SUCCESS ::`);
     res.send();
 })
 

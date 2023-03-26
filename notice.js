@@ -33,20 +33,29 @@ app.use(express.json());
 app.get('/:noticeId', async (req, res) => {
     const noticeId = req.params.noticeId;
 
-    const [notice, fields] = await db.execute(`SELECT * FROM notice WHERE notice_id = ?`, [noticeId]);
-    res.send({
-        msg: 'NOTICE_READ_SUCCESS',
-        data: notice[0]
-    });
+    try {
+        const [notice, fields] = await db.execute(`SELECT * FROM notice WHERE notice_id = ?`, [noticeId]);
+
+        console.log(`NOTICE_READ_SUCCESS :: noticeId = ${noticeId}`);
+        res.send({
+            msg: 'NOTICE_READ_SUCCESS',
+            data: notice[0]
+        });
+    } catch (e) {
+        console.log(`NOTICE_READ_FAILED :: msg = ${e}`);
+        res.status(500).send({msg: 'NOTICE_READ_FAILED'});
+    }
 })
 
 // notice 가져오기
 app.get('/', async (req, res) => {
     try {
         const [notices, fields] = await db.execute(`SELECT * FROM notice WHERE notice_date < CURRENT_DATE() ORDER BY notice_date DESC`);
+
+        console.log(`NOTICE_READ_SUCCESS :: `);
         res.send(notices);
     } catch (e) {
-        console.log(e);
+        console.log(`NOTICE_READ_FAILED :: msg = ${e}`);
         res.status(500).send({msg: "server error"});
     }
 })
@@ -66,9 +75,11 @@ app.post('/', upload.single('photo'), async (req, res) => {
     try {
         const [result] = await db.execute(`INSERT INTO notice (notice_title, notice_context, notice_photo, notice_date, notice_target, notice_type) VALUES (?, ?, ?, ?, ?, ?)`,
           [title, context, photo, date, target, type]);
+
+        console.log(`NOTICE_CREATE_SUCCESS :: noticeId = ${result.insertId}`);
         res.send({id: result.insertId});
     } catch (e) {
-        console.log(e);
+        console.log(`NOTICE_CREATE_FAILED :: msg = ${e}`);
         res.status(500).send({msg: "server error"});
     }
 })
@@ -96,11 +107,16 @@ app.post('/delete', async (req, res) => {
                         else console.log(data);
                     });
                 }
-            } else res.status(400).send({msg: '삭제 실패'});
+            } else {
+                console.log(`NOTICE_DELETE_FAILED :: noticeIds = ${notice_ids}`);
+                res.status(400).send({msg: '삭제 실패'});
+            }
         }
+
+        console.log(`NOTICE_DELETE_SUCCESS :: noticeIds = ${notice_ids}`);
         res.send({notice_id: notice_ids, msg: '삭제 성공'});
     } catch (e) {
-        console.log(e);
+        console.log(`NOTICE_DELETE_FAILED :: msg = ${e}`);
         res.status(500).send({msg: 'server error'});
     }
 })
