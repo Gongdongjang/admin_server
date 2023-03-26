@@ -44,9 +44,10 @@ app.post('/banner', async (req, res) => {
             await db.execute(`UPDATE content SET promotion_banner = ? WHERE content_id = ?`, [order, id]);
         }
 
+        console.log(`BANNER_CONTENT_CREATE_SUCCESS :: bannerIds = ${bannerIds}`);
         res.send({msg: 'BANNER_CONTENT_CREATE_SUCCESS', data: bannerIds});
     } catch (e) {
-        console.log(e);
+        console.log(`BANNER_CONTENT_CREATE_FAILED :: msg = {${e}}`);
         res.status(500).send({msg: 'BANNER_CONTENT_CREATE_FAIL'})
     }
 })
@@ -56,9 +57,10 @@ app.get('/banner', async (req, res) => {
     try {
         const [result, field] = await db.execute(`SELECT * FROM content WHERE promotion_banner IS NOT NULL ORDER BY promotion_banner ASC`);
 
+        console.log(`BANNER_CONTENT_READ_SUCCESS :: `);
         res.send({msg: 'BANNER_CONTENT_READ_SUCCESS', data: result});
     } catch (e) {
-        console.log(e);
+        console.log(`BANNER_CONTENT_READ_FAILED :: msg = ${e}`);
         res.status(500).send({msg: 'BANNER_CONTENT_READ_FAIL'});
     }
 })
@@ -69,36 +71,57 @@ app.get('/', async (req, res) => {
     const is_tmp = req.query.is_tmp;
     const category = req.query.category;
 
-    let return_content;
-    if (query === 'admin') { // 관리자용
-        if (!category) {
-            const [contents, field] = await db.execute(`SELECT * FROM content WHERE is_tmp = ? ORDER BY content_date DESC`, [is_tmp]);
-            return_content = contents;
-        } else {
-            const [contents, field] = await db.execute(`SELECT * FROM content WHERE content_category = ? AND is_tmp = ? ORDER BY content_date DESC`, [category, is_tmp]);
+    try {
+        let return_content;
+        if (query === 'admin') { // 관리자용
+            if (!category) {
+                const [contents, field] = await db.execute(`SELECT * FROM content WHERE is_tmp = ? ORDER BY content_date DESC`, [is_tmp]);
+                return_content = contents;
+            } else {
+                const [contents, field] = await db.execute(`SELECT * FROM content WHERE content_category = ? AND is_tmp = ? ORDER BY content_date DESC`, [category, is_tmp]);
+                return_content = contents;
+            }
+        }
+        else { // 소비자용
+            const [contents, fields] = await db.execute(`SELECT * FROM content WHERE is_tmp = 0 AND upload_date < CURRENT_DATE() ORDER BY content_date DESC`);
             return_content = contents;
         }
+        console.log(`CONTENT_READ_SUCCESS :: `);
+        res.send(return_content);
+    } catch (e) {
+        console.log(`CONTENT_READ_FAILED :: msg = ${e}`);
+        res.status(500).send({msg: 'CONTENT_READ_FAIL'});
     }
-    else { // 소비자용
-        const [contents, fields] = await db.execute(`SELECT * FROM content WHERE is_tmp = 0 AND upload_date < CURRENT_DATE() ORDER BY content_date DESC`);
-        return_content = contents;
-    }
-    res.send(return_content);
 })
 
 // content 제목으로 검색
 app.get('/search', async (req, res) => {
     const search_word = req.query.search;
 
-    const [contents, fields] = await db.execute(`SELECT * FROM content WHERE CONCAT_WS(' ', content_context, content_title) LIKE ? AND is_tmp = 0 ORDER BY content_date DESC`, ['%' + search_word + '%']);
-    res.send(contents);
+    try {
+        const [contents, fields] = await db.execute(`SELECT * FROM content WHERE CONCAT_WS(' ', content_context, content_title) LIKE ? AND is_tmp = 0 ORDER BY content_date DESC`, ['%' + search_word + '%']);
+
+        console.log(`CONTENT_SEARCH_SUCCESS :: searchWord = ${search_word}`);
+        res.send(contents);
+    } catch (e) {
+        console.log(`CONTENT_SEARCH_FAILED :: msg = ${e}`);
+        res.status(500).send({msg: 'CONTENT_SEARCH_FAIL'});
+    }
 })
 
 // 특정 content
 app.get('/:content_id', async (req, res) => {
     const content_id = req.params.content_id;
-    const [content, field] = await db.execute(`SELECT * FROM content WHERE content_id = ?`, [content_id]);
-    res.send(content[0]);
+
+    try {
+        const [content, field] = await db.execute(`SELECT * FROM content WHERE content_id = ?`, [content_id]);
+
+        console.log(`CONTENT_READ_SUCCESS :: contentId = ${content_id}`);
+        res.send(content[0]);
+    } catch (e) {
+        console.log(`CONTENT_READ_FAILED :: msg = ${e}`);
+        res.status(500).send({msg: 'CONTENT_READ_FAIL'});
+    }
 })
 
 // content 작성
@@ -135,10 +158,12 @@ app.post('/', upload.fields([{name: 'photo', maxCount: 1}, {name: 'thumbnail', m
     try {
         const [result] = await db.execute(`INSERT INTO content(content_title, content_context, content_photo, content_thumbnail, is_tmp, upload_type, upload_date, content_main, content_category, content_md_id1, content_md_id2)
                                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [title, context, photo, thumbnail, is_tmp, upload_type, upload_date, main, category, md1, md2]);
+
+        console.log(`CONTENT_CREATE_SUCCESS :: contentId = ${result.insertId}`);
         res.send({id: result.insertId});
     } catch (e) {
-        console.log(e);
-        res.status(500).send({msg: "server error"});
+        console.log(`CONTENT_CREATE_FAILED :: msg = ${e}`);
+        res.status(500).send({msg: "CONTENT_CREATE_FAILED"});
     }
 });
 
@@ -218,18 +243,18 @@ app.patch('/:content_id', upload.fields([{name: 'photo', maxCount: 1}, {name: 't
                 });
             }
         }
+
+        console.log(`CONTENT_UPDATED_SUCCESS :: contentId = ${content_id}`);
         res.send(result);
     } catch (e) {
-        console.log(e);
+        console.log(`CONTENT_UPDATE_FAILED :: msg = ${e}`);
+        res.status(500).send({msg: "CONTENT_UPDATED_FAILED"});
     }
-    console.log(sql_key);
-    console.log(sql_parameter);
 })
 
 // content 삭제(편집)
 app.post('/delete', async (req, res) => {
     const content_ids = req.body.content_ids;
-    console.log(content_ids);
 
     try {
         for (let content_id of content_ids) {
@@ -238,8 +263,6 @@ app.post('/delete', async (req, res) => {
             const photo = content[0].content_photo;
             const thumbnail = content[0].content_thumbnail;
             const main = content[0].content_main;
-
-            console.log(photo, thumbnail);
 
             // db 에서 content 삭제
             const [result] = await db.execute(`DELETE FROM content WHERE content_id=?`, [content_id]);
@@ -274,12 +297,14 @@ app.post('/delete', async (req, res) => {
                     })
                 }
             } else {
+                console.log(`CONTENT_DELETE_FAILED :: contentIds = ${content_ids}`);
                 res.status(400).send({msg: '삭제 실패'});
             }
         }
+        console.log(`CONTENT_DELETE_SUCCESS :: contentIds = ${content_ids}`);
         res.send({content_id: content_ids, msg: '삭제 성공'});
     } catch (e) {
-        console.log(e);
+        console.log(`CONTENT_DELETE_FAILED :: msg = ${e}`);
         res.status(400).send({msg: '잘못된 content 삭제 시도'});
     }
 })
