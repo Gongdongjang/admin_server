@@ -49,11 +49,20 @@ app.get('/:noticeId', async (req, res) => {
 
 // notice 가져오기
 app.get('/', async (req, res) => {
+    const aspect = req.query.aspect;
+
     try {
-        const [notices, fields] = await db.execute(`SELECT * FROM notice WHERE notice_date < CURRENT_DATE() ORDER BY notice_date DESC`);
+        let returnNotice;
+        if (aspect !== undefined) {
+            const [notices, fields] = await db.execute(`SELECT * FROM notice ORDER BY notice_date DESC`);
+            returnNotice = notices;
+        } else {
+            const [notices, fields] = await db.execute(`SELECT * FROM notice WHERE notice_date < CURRENT_DATE() ORDER BY notice_date DESC`);
+            returnNotice = notices;
+        }
 
         console.log(`NOTICE_READ_SUCCESS :: `);
-        res.send(notices);
+        res.send(returnNotice);
     } catch (e) {
         console.log(`NOTICE_READ_FAILED :: msg = ${e}`);
         res.status(500).send({msg: "server error"});
