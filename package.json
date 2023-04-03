@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.27.2",
+    "crypto-js": "^4.1.1",
     "aws-sdk": "^2.1099.0",
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",

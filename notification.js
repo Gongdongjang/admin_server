@@ -40,9 +40,12 @@ firebase.initializeApp({
 app.get('/user', async (req, res) => {
     try {
         const [result, field] = await db.execute(`SELECT user_no, user_id, user_name FROM user`);
+
+        console.log(`USER_READ_SUCCESS :: `);
         res.send({msg: 'USER_READ_SUCCESS', data: result});
     } catch (e) {
-        console.log(e);
+        console.log(`USER_READ_FAILED :: msg = ${e}`);
+        res.status(500).send({msg: 'USER_READ_FAILED'});
     }
 })
 
@@ -65,9 +68,11 @@ app.get('/', async (req, res) => {
             resBody['data'] = result;
         }
 
+        console.log(`NOTIFICATION_READ_SUCCESS :: `);
         res.send(resBody);
     } catch (e) {
-        console.log(e);
+        console.log(`NOTIFICATION_READ_FAILED :: msg = ${e}`);
+        res.status(500).send({msg: 'NOTIFICATION_READ_FAILED'});
     }
 })
 
@@ -81,9 +86,11 @@ app.get('/:notificationId', async (req, res) => {
         const [result, field] = await db.execute(`SELECT *FROM notification WHERE notification_id = ?`, [notificationId]);
         resBody['data'] = result[0];
 
+        console.log(`NOTIFICATION_READ_SUCCESS :: notificationId = ${notificationId}`);
         res.send(resBody);
     } catch (e) {
-        console.log(e);
+        console.log(`NOTIFICATION_READ_FAILED :: msg = ${e}`);
+        res.status(500).send({msg: 'NOTIFICATION_READ_FAILED'});
     }
 })
 
@@ -128,7 +135,6 @@ const createNotification = async (body, image) => {
 
 const createTokenMessage = (userIds, tokens, title, content, image) => {
     let message;
-    console.log(tokens);
 
     if (image !== null) {
         const url = encodeURI(`https://ggdjang.s3.ap-northeast-2.amazonaws.com/${image}`)
@@ -221,6 +227,7 @@ app.post('/token', upload.single('image'), async (req, res) => {
             const msgResult = await firebase.messaging().sendMulticast(message);
             await createNotificationByUser(noticeResult.insertId, userIds, 'SENT');
 
+            console.log(`NOTIFICATION_SEND_SUCCESS :: notificationId = ${noticeResult.insertId}`);
             res.send({
                 msg: "NOTIFICATION_SEND_SUCCESS",
                 data: {
@@ -230,10 +237,13 @@ app.post('/token', upload.single('image'), async (req, res) => {
             );
         } else {
             await createNotificationByUser(noticeResult.insertId, userIds, 'SCHEDULED');
+
+            console.log(`NOTIFICATION_RESERVE_SUCCESS :: notificationId = ${noticeResult.insertId}`);
             res.send({msg: "NOTIFICATION_RESERVE_SUCCESS"});
         }
     } catch (e) {
-        console.log(e);
+        console.log(`NOTIFICATION_SEND_FAILED :: msg = ${e}`);
+        res.status(500).send({msg: 'NOTIFICATION_SEND_FAILED'});
     }
 })
 
@@ -263,6 +273,7 @@ app.post('/topic', upload.single('image'), async (req, res) => {
             const msgResult = await firebase.messaging().send(message);
             await createNotificationByUser(noticeResult.insertId, userIds, 'SENT');
 
+            console.log(`NOTIFICATION_SEND_SUCCESS (topic) :: notificationId = ${noticeResult.insertId}`);
             res.send({
                 msg: "NOTIFICATION_SEND_SUCCESS",
                 data: {
@@ -272,45 +283,51 @@ app.post('/topic', upload.single('image'), async (req, res) => {
             );
         } else {
             await createNotificationByUser(noticeResult.insertId, userIds, 'SCHEDULED');
+
+            console.log(`NOTIFICATION_RESERVE_SUCCESS (topic) :: notificationId = ${noticeResult.insertId}`);
             res.send({msg: "NOTIFICATION_RESERVE_SUCCESS"});
         }
     } catch (e) {
-        console.log(e);
+        console.log(`NOTIFICATION_SEND_FAILED (topic) :: msg = ${e}`);
+        res.status(500).send({msg: 'NOTIFICATION_SEND_FAILED'});
     }
 })
 
 /** 매 정각에 예약된 알림(정각 ~ 5분 사이) 확인 후 발송 */
 scheduler.scheduleJob('0 * * * *', async () => {
-    const [notifications, field] = await db.execute(`SELECT notification_id, notification_target, notification_title, notification_content FROM notification 
-                                                                  WHERE notification_push_type = ? AND notification_date BETWEEN NOW() and NOW() + INTERVAL 5 MINUTE`, ['예약']);
+    try {
+        const [notifications, field] = await db.execute(`SELECT notification_id, notification_target, notification_title, notification_content FROM notification 
+                                                                      WHERE notification_push_type = ? AND notification_date BETWEEN NOW() and NOW() + INTERVAL 5 MINUTE`, ['예약']);
 
-    for (const notification of notifications) {
-        const notificationId = notification.notification_id;
-        const target = notification.notification_target;
-        const title = notification.notification_title;
-        const content = notification.notification_content;
-        const image = notification.notification_img;
+        for (const notification of notifications) {
+            const notificationId = notification.notification_id;
+            const target = notification.notification_target;
+            const title = notification.notification_title;
+            const content = notification.notification_content;
+            const image = notification.notification_img;
 
-        const [users, fields] = await db.execute(`SELECT notification_user FROM notification_by_user WHERE notification_id = ?`, [notificationId]);
-        let userIds = [];
-        for (let user of users) {
-            userIds.push(user.notification_user);
+            const [users, fields] = await db.execute(`SELECT notification_user FROM notification_by_user WHERE notification_id = ?`, [notificationId]);
+            let userIds = [];
+            for (let user of users) {
+                userIds.push(user.notification_user);
+            }
+
+            if (target === '개인') {
+                const tokens = await getTokensByUser(userIds);
+
+                const message = createTokenMessage(tokens, title, content, image);
+                const msgResult = await firebase.messaging().sendMulticast(message);
+            } else if (target === '소비자') {
+                const message = createTopicMessage('userTopic', title, content, image);
+                const msgResult = await firebase.messaging().send(message);
+            }
+            // TODO: 관리자 알림 개발 완료 후 추가
+
+            await db.execute(`UPDATE notification_by_user SET status = ? WHERE notification_id = ?`, ['SENT', notificationId]);
+            console.log(`NOTIFICATION_SEND_SUCCESS (schedule) :: notificationId = ${notificationId}`);
         }
-
-        if (target === '개인') {
-            const tokens = await getTokensByUser(userIds);
-
-            const message = createTokenMessage(tokens, title, content, image);
-            const msgResult = await firebase.messaging().sendMulticast(message);
-            console.log(msgResult);
-        } else if (target === '소비자') {
-            const message = createTopicMessage('userTopic', title, content, image);
-            const msgResult = await firebase.messaging().send(message);
-            console.log(msgResult);
-        }
-        // TODO: 관리자 알림 개발 완료 후 추가
-
-        await db.execute(`UPDATE notification_by_user SET status = ? WHERE notification_id = ?`, ['SENT', notificationId]);
+    } catch (e) {
+        console.log(`NOTIFICATION_SEND_FAILED (schedule) :: msg = ${e}`);
     }
 })
 

@@ -18,6 +18,9 @@ const checkPass = (req) => {
     if (req.originalUrl.indexOf('/login') !== -1){
         return true;
     }
+    if (req.originalUrl.indexOf('/signup') !== -1){
+        return true;
+    }
     if (req.method === 'GET' && (req.originalUrl === '/api/content' || req.originalUrl === '/api/content/banner')) {
         return true;
     }
@@ -25,7 +28,7 @@ const checkPass = (req) => {
 
 const auth_middleware = async (req, res, next) => {
     if (checkPass(req)) {
-        console.log(`${req.originalUrl} pass`);
+        console.log(`AUTH_PASS :: url = ${req.originalUrl}`);
         next();
     } else {
         let token = get_cookies(req);
