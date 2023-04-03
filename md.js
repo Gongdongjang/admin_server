@@ -57,7 +57,7 @@ app.get('/pickup/:md_id', async (req, res) => {//특정 md의 픽업리스트 �
     
     try{
       
-      let [row2, field] = await db.execute("select * from "+"`"+"order"+"`"+` where md_id=?`, [md_id]);
+      let [row2, field] = await db.execute("select * from "+"`"+"order"+"`"+` where md_id=? and order_cancel=0`, [md_id]);
       res.send(row2);
       
     }

@@ -24,27 +24,15 @@ app.get("/test", async (req, res, next) => { //md_id=2인 상품 데이터 출�
        return res.status(500).json(err);
      }
   });
-app.get("/store/items", async (req, res, next) => { //특정 스토어에서 진행하는 상품들 출력
-      let store_id = req.query.store_id;
-     // let store_id =37;
-      //console.log(store_id);
-      try {
-        const [items] = await db.execute(
-          `select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id
-          where store_id = ${store_id}`
-        );
-        resultCode = 200;
-        message = "item get 성공";
-        
-        return res.json({
-          code: resultCode,
-          message: message,
-          items: items
-        }); 
-      } catch (err) {
-        console.error(err);
-        return res.status(500).json(err);
-      }
+app.get("/store/items/:store_id", async (req, res, next) => { //특정 스토어에서 진행하는 상품들 출력
+      const store_id = req.params.store_id;
+    
+        const [mdInfo] = await db.execute(
+          `select * from md join pickup on md.md_id=pickup.md_id  join stock on md.md_id=stock.md_id   join payment on md.md_id=payment.md_id  join farm on md.farm_id=farm.farm_id join md_Img on md.md_id=md_Img.md_id
+          where store_id  = ?`,[store_id]);
+         
+          res.send(mdInfo);
+      
     });
 app.get("/pickup", async (req, res, next) => { //특정 스토어에서 진행하는 상품의 픽업리스트
       let md_id = req.query.md_id;
