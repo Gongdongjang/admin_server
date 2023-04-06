@@ -46,11 +46,18 @@ app.post('/', async (req, res) => {
                     res.cookie('access_token', access_token, {httpOnly: false, maxAge: 60000 * 60});
                     res.cookie('refresh_token', refresh_token, {httpOnly: false, maxAge: 60000 * 60 * 24 * 14});
 
-                    console.log(`LOGIN_SUCCESS :: userID = {${id}}`);
-                    res.send({
+                    let body = {
                         access_token: access_token,
                         refresh_token: refresh_token
-                    });
+                    }
+
+                    const [store, fields] = await db.execute(`SELECT store_id FROM store WHERE store_name = ?`, [user[0].admin_name]);
+                    if (store.length !== 0) {
+                        body.storeId = store[0].store_id;
+                    }
+
+                    console.log(`LOGIN_SUCCESS :: userID = {${id}}`);
+                    res.send(body);
                 } else {
                     console.log(`LOGIN_FAILED :: userID = {${id}}`);
                     res.send({access_token: 'pwd_false'});
